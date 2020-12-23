@@ -16,6 +16,12 @@ namespace SchetsEditor
         {
             get { return Graphics.FromImage(bitmap); }
         }
+
+        public Bitmap tekening
+        {
+            get { return bitmap; }
+        }
+
         public void VeranderAfmeting(Size sz)
         {
             if (sz.Width > bitmap.Size.Width || sz.Height > bitmap.Size.Height)
@@ -24,6 +30,7 @@ namespace SchetsEditor
                                          , Math.Max(sz.Height, bitmap.Size.Height)
                                          );
                 Graphics gr = Graphics.FromImage(nieuw);
+                //Hier kunnen we eventueel de background color bepalen...
                 gr.FillRectangle(Brushes.White, 0, 0, sz.Width, sz.Height);
                 gr.DrawImage(bitmap, 0, 0);
                 bitmap = nieuw;

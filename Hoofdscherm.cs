@@ -15,8 +15,10 @@ namespace SchetsEditor
             this.maakFileMenu();
             this.maakHelpMenu();
             this.Text = "Schets editor";
-            this.IsMdiContainer = true;
+            this.IsMdiContainer = false;
             this.MainMenuStrip = menuStrip;
+            this.KeyPreview = true;
+            this.KeyDown += new KeyEventHandler(HoofdschermKeyDown);
         }
         private void maakFileMenu()
         {   ToolStripDropDownItem menu;
@@ -41,11 +43,21 @@ namespace SchetsEditor
 
         private void nieuw(object sender, EventArgs e)
         {   SchetsWin s = new SchetsWin();
-            s.MdiParent = this;
+            //s.MdiParent = this;
             s.Show();
         }
         private void afsluiten(object sender, EventArgs e)
         {   this.Close();
+        }
+
+        private void HoofdschermKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.N)
+            {
+                // Your code to execute when shortcut Ctrl+N happens here
+                Console.WriteLine("new window?");
+                this.nieuw(null, null);
+            }
         }
     }
 }
