@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace SchetsEditor
 {
     public class Schets
     {
-        private Bitmap bitmap;
-        
+        public Bitmap bitmap;
+
         public Schets()
         {
             bitmap = new Bitmap(1, 1);
@@ -16,6 +17,13 @@ namespace SchetsEditor
         {
             get { return Graphics.FromImage(bitmap); }
         }
+
+        public Bitmap tekening
+        {
+            get { return bitmap; }
+            set { bitmap = value; }
+        }
+
         public void VeranderAfmeting(Size sz)
         {
             if (sz.Width > bitmap.Size.Width || sz.Height > bitmap.Size.Height)
@@ -24,6 +32,7 @@ namespace SchetsEditor
                                          , Math.Max(sz.Height, bitmap.Size.Height)
                                          );
                 Graphics gr = Graphics.FromImage(nieuw);
+                //Hier kunnen we eventueel de background color bepalen...
                 gr.FillRectangle(Brushes.White, 0, 0, sz.Width, sz.Height);
                 gr.DrawImage(bitmap, 0, 0);
                 bitmap = nieuw;
