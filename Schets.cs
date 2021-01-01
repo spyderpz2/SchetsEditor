@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace SchetsEditor
 {
     public class Schets
     {
-        private Bitmap bitmap;
-        
+        public Bitmap bitmap;
+
         public Schets()
         {
             bitmap = new Bitmap(1, 1);
@@ -20,6 +21,7 @@ namespace SchetsEditor
         public Bitmap tekening
         {
             get { return bitmap; }
+            set { bitmap = value; }
         }
 
         public void VeranderAfmeting(Size sz)

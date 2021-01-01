@@ -14,6 +14,7 @@ namespace SchetsEditor
         public Schets Schets
         { get { return schets;   }
         }
+
         public SchetsControl()
         {   this.BorderStyle = BorderStyle.Fixed3D;
             this.schets = new Schets();
@@ -25,7 +26,8 @@ namespace SchetsEditor
         {
         }
         private void teken(object o, PaintEventArgs pea)
-        {   schets.Teken(pea.Graphics);
+        {
+            schets.Teken(pea.Graphics);
         }
         private void veranderAfmeting(object o, EventArgs ea)
         {   schets.VeranderAfmeting(this.ClientSize);

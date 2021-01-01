@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Resources;
 using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
 using System.IO;
 
 namespace SchetsEditor
@@ -12,10 +13,12 @@ namespace SchetsEditor
     public class SchetsWin : Form
     {   
         MenuStrip menuStrip;
+        public UndoRedoController UndoRedoController = new UndoRedoController();
         SchetsControl schetscontrol;
         ISchetsTool huidigeTool;
         Panel paneel;
         bool vast;
+
         ResourceManager resourcemanager
             = new ResourceManager("SchetsEditor.Properties.Resources"
                                  , Assembly.GetExecutingAssembly()
@@ -39,41 +42,26 @@ namespace SchetsEditor
             this.huidigeTool = (ISchetsTool)((RadioButton)obj).Tag;
         }
 
+        private void nieuweSchets(object obj, EventArgs ea)
+        {
+            new SchetsWin().Show();
+        }
 
         private void opslaan(object obj, EventArgs ea)
         {
             Bitmap tekening = this.schetscontrol.Schets.tekening;
-
-            Stream myStream;
-            SaveFileDialog opslaanDialog = new SaveFileDialog();
-
-            opslaanDialog.Filter = "image files (*.png, *.jpg,*.jpeg,*.bmp)|*.png,*.jpg,*.jpeg,*.bmp";
-            opslaanDialog.FilterIndex = 1;
-            opslaanDialog.RestoreDirectory = true;
-            opslaanDialog.DefaultExt = ".png";
-            opslaanDialog.AddExtension = true;
-            opslaanDialog.ValidateNames = true;
-            opslaanDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-
-            if (bestandsNaam != null)
+            
+            if (this.bestandsNaam != null)
             {
-                Console.WriteLine("is al opgeslagen");
-                opslaanDialog.FileName = this.bestandsNaam;
-                opslaanDialog.InitialDirectory = @"" + this.bestandsNaam;
-            }
-
-            if (opslaanDialog.ShowDialog() == DialogResult.OK)
-            {
-                if ((myStream = opslaanDialog.OpenFile()) != null)
+                if (File.Exists(this.bestandsNaam))
                 {
-                    FileInfo bestandsInfo = new FileInfo(opslaanDialog.FileName);
-                    this.bestandsNaam = opslaanDialog.FileName;
-                    this.Text = bestandsInfo.Name;
-                    tekening.Save(myStream, this.getImageFormatFromFile(bestandsInfo));
-                    myStream.Close();
+                    byte[] bitmapBytes = tekening.ToByteArray(this.getImageFormatFromFile(new FileInfo(this.bestandsNaam)));
+                    File.WriteAllBytes(this.bestandsNaam, bitmapBytes);
+                    return;
                 }
             }
 
+            SaveFile(tekening, "Sla tekening op");
         }
 
         private ImageFormat getImageFormatFromFile(FileInfo fileInfo)
@@ -95,13 +83,35 @@ namespace SchetsEditor
 
         private void opslaanAls(object obj, EventArgs ea)
         {
-            //this.Close();
+            Bitmap tekening = this.schetscontrol.Schets.tekening;
+            SaveFile(tekening, "Sla tekening op als");
         }
 
         private void afsluiten(object obj, EventArgs ea)
         {
             this.Close();
         }
+
+        private void undo(object obj, EventArgs ea)
+        {
+            if (this.UndoRedoController.noneUndoRedoYet())
+            {
+                this.UndoRedoController.addState((Bitmap)this.schetscontrol.Schets.tekening.Clone());
+            }
+
+
+            this.schetscontrol.Schets.bitmap = this.UndoRedoController.undo();
+            this.schetscontrol.Refresh();
+
+
+        }
+
+        private void redo(object obj, EventArgs ea) 
+        {
+            this.schetscontrol.Schets.bitmap = this.UndoRedoController.redo();
+            this.schetscontrol.Refresh();
+        }
+
 
         public SchetsWin()
         {
@@ -126,7 +136,10 @@ namespace SchetsEditor
             
             //schetscontrol.Location = new Point(64, 10);
             schetscontrol.MouseDown += (object o, MouseEventArgs mea) =>
-                                       {   vast=true;  
+                                       {
+                                           this.UndoRedoController.addState((Bitmap)this.schetscontrol.Schets.tekening.Clone());
+
+                                           vast = true;  
                                            huidigeTool.MuisVast(schetscontrol, mea.Location); 
                                        };
             schetscontrol.MouseMove += (object o, MouseEventArgs mea) =>
@@ -134,12 +147,19 @@ namespace SchetsEditor
                                            huidigeTool.MuisDrag(schetscontrol, mea.Location); 
                                        };
             schetscontrol.MouseUp   += (object o, MouseEventArgs mea) =>
-                                       {   if (vast)
-                                           huidigeTool.MuisLos (schetscontrol, mea.Location);
-                                           vast = false; 
+                                       {
+                                           if (vast)
+                                           {
+                                               huidigeTool.MuisLos(schetscontrol, mea.Location);
+                                               vast = false;
+                                           }
                                        };
             schetscontrol.KeyPress +=  (object o, KeyPressEventArgs kpea) => 
-                                       {   huidigeTool.Letter  (schetscontrol, kpea.KeyChar); 
+                                       {   huidigeTool.Letter  (schetscontrol, kpea.KeyChar);
+                                           if (kpea.KeyChar >= 32)
+                                           {
+                                               this.UndoRedoController.addState((Bitmap)this.schetscontrol.Schets.tekening.Clone());
+                                           }
                                        };
             schetscontrol.Location = new Point(60, 30);
             schetscontrol.Size = new Size(this.ClientSize.Width, this.ClientSize.Height);
@@ -162,6 +182,7 @@ namespace SchetsEditor
         {   
             ToolStripMenuItem menu = new ToolStripMenuItem("File");
             menu.MergeAction = MergeAction.MatchOnly;
+            menu.DropDownItems.Add("Nieuw", null, this.nieuweSchets);
             menu.DropDownItems.Add("Opslaan", null, this.opslaan);
             menu.DropDownItems.Add("Opslaan als...", null, this.opslaanAls);
             menu.DropDownItems.Add("Sluiten", null, this.afsluiten);
@@ -255,14 +276,90 @@ namespace SchetsEditor
             {
                 // Your code to execute when shortcut Ctrl+N happens here
                 Console.WriteLine("new window?");
-                new SchetsWin().Show();
+                this.nieuweSchets(null, null);
+            }
+            else if (e.Control && e.Shift && e.KeyCode == Keys.S)
+            {
+                // Your code to execute when shortcut Ctrl+S & Shift happens here
+                Console.WriteLine("save as?");
+                this.opslaanAls(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.S)
             {
-                // Your code to execute when shortcut Ctrl+N happens here
+                // Your code to execute when shortcut Ctrl+S happens here
                 Console.WriteLine("save?");
                 this.opslaan(null, null);
             }
+            else if (e.Control && e.KeyCode == Keys.Z)
+            {
+                // Your code to execute when shortcut Ctrl+S happens here
+                Console.WriteLine("undo?");
+                this.undo(null, null);
+            }
+            else if (e.Control && e.KeyCode == Keys.Y)
+            {
+                // Your code to execute when shortcut Ctrl+Y happens here
+                Console.WriteLine("redo?");
+                this.redo(null, null);
+            }
+        }
+
+
+        private void SaveFile(Bitmap tekening, String filterBoxTitle)
+        {
+
+            Stream myStream;
+            using (SaveFileDialog opslaanDialog = new SaveFileDialog())
+            {
+                opslaanDialog.Filter = "PNG | *.png | GIF | *.gif | BMP | *.bmp | JPEG | *.jpg; *.jpeg";
+                opslaanDialog.FilterIndex = 1;
+                opslaanDialog.RestoreDirectory = true;
+                opslaanDialog.DefaultExt = ".png";
+                opslaanDialog.ValidateNames = true;
+                opslaanDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+                opslaanDialog.Title = filterBoxTitle;
+
+                if (this.bestandsNaam != null)
+                {
+                    Console.WriteLine("is al opgeslagen");
+                    opslaanDialog.FileName = this.bestandsNaam;
+                    opslaanDialog.InitialDirectory = @"" + this.bestandsNaam;
+                }
+
+                if (opslaanDialog.ShowDialog() == DialogResult.OK)
+                {
+                    using (myStream = opslaanDialog.OpenFile())
+                    {
+                        if (myStream != null)
+                        {
+                            FileInfo bestandsInfo = new FileInfo(opslaanDialog.FileName);
+                            this.bestandsNaam = opslaanDialog.FileName;
+                            this.Text = bestandsInfo.Name;
+                            byte[] bitmapBytes = tekening.ToByteArray(this.getImageFormatFromFile(bestandsInfo));
+                            myStream.Write(bitmapBytes, 0, bitmapBytes.Length);
+                        }
+                        myStream.Close();
+
+                    }
+                }
+            }
+
+        }
+
+
+
+    }
+
+    public static class ImageExtensions
+    {
+        public static byte[] ToByteArray(this Image image, ImageFormat format)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                image.Save(ms, format);
+                return ms.ToArray();
+            }
         }
     }
+
 }
