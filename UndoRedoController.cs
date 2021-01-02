@@ -5,7 +5,6 @@ namespace SchetsEditor
 {
     public class UndoRedoController
     {
-
         private Stack<Bitmap> UndoList = new Stack<Bitmap>();
         private Stack<Bitmap> RedoList = new Stack<Bitmap>();
         public int test = 0;
