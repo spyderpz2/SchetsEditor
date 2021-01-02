@@ -96,7 +96,7 @@ namespace SchetsEditor
         {   g.DrawRectangle(MaakPen(kwast,3), TweepuntTool.Punten2Rechthoek(p1, p2));
             if (u != null)
             {
-                u.addState(new DrawnElement(ElementType.RechthoekOpen, ((SolidBrush)kwast).Color, p1, p2, 3));
+                u.addCommand(new DrawCommand(ElementType.RechthoekOpen, ((SolidBrush)kwast).Color, p1, p2, 3));
             }
 
         }
@@ -110,7 +110,7 @@ namespace SchetsEditor
 
         {   g.FillRectangle(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
             //THIS HAS TO BE CHANGED TO ACTUAL ELEMENT LIST
-            u.addState(new DrawnElement(ElementType.RechthoekDicht, ((SolidBrush)kwast).Color, p1, p2, 3));
+            u.addCommand(new DrawCommand(ElementType.RechthoekDicht, ((SolidBrush)kwast).Color, p1, p2, 3));
         }
     }
 
@@ -122,7 +122,7 @@ namespace SchetsEditor
         {   g.DrawLine(MaakPen(this.kwast,3), p1, p2);
             if (u != null)
             {
-                u.addState(new DrawnElement(ElementType.Lijn, ((SolidBrush)this.kwast).Color, p1, p2, 3));
+                u.addCommand(new DrawCommand(ElementType.Lijn, ((SolidBrush)this.kwast).Color, p1, p2, 3));
             }
         }
     }

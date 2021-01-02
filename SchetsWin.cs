@@ -94,52 +94,15 @@ namespace SchetsEditor
 
         private void undo(object obj, EventArgs ea)
         {
-
-            //Hier nog fixen dat op de een of andere manier te tekening ook ververst wordt na het tekenen.
-
-
-            Console.WriteLine("Number of elements: " + this.UndoRedoController.getElements().Count);
-            Stack<DrawnElement> drawOrder = this.UndoRedoController.undo().reverse();
-            Console.WriteLine(drawOrder.toString());
-
-            using (Graphics toDrawOn = this.schetscontrol.MaakBitmapGraphics())
-            {
-                foreach (DrawnElement elToDraw in drawOrder)
-                {
-                    switch (elToDraw.elementType)
-                    {
-                        case ElementType.Lijn:
-                            toDrawOn.DrawLine(TweepuntTool.MaakPen(new SolidBrush(elToDraw.kleur), elToDraw.lijnDikte), elToDraw.startPunt, elToDraw.eindPunt);
-                            break;
-                        case ElementType.RechthoekOpen:
-                            toDrawOn.DrawRectangle(elToDraw.CreatePen(), elToDraw.ToRectangle());
-                            Console.WriteLine("|jupopp");
-                            break;
-                        case ElementType.RechthoekDicht:
-                            toDrawOn.FillRectangle(new SolidBrush(elToDraw.kleur), elToDraw.ToRectangle());
-                            break;
-                        case ElementType.ElipseOpen:
-                            toDrawOn.DrawEllipse(elToDraw.CreatePen(), elToDraw.ToRectangle());
-                            break;
-                        case ElementType.ElipseDicht:
-                            toDrawOn.FillEllipse(new SolidBrush(elToDraw.kleur), elToDraw.ToRectangle());
-                            break;
-                        default:
-                            Console.WriteLine("ooops");
-                            break;
-                    }
-                }
-                //this.schetscontrol.Schets.bitmap = new Bitmap(this.schetscontrol.Schets.bitmap.Width, this.schetscontrol.Schets.bitmap.Height, toDrawOn);
-            }
+            this.schetscontrol.Schets.Schoon();
+            this.UndoRedoController.undo().drawElements(this.schetscontrol.MaakBitmapGraphics());
             this.schetscontrol.Refresh();
-
-
         }
 
         private void redo(object obj, EventArgs ea) 
         {
-            /*this.schetscontrol.Schets.bitmap = this.UndoRedoController.redo();
-            this.schetscontrol.Refresh();*/
+            this.UndoRedoController.redo().drawElements(this.schetscontrol.MaakBitmapGraphics());
+            this.schetscontrol.Refresh();
         }
 
 
@@ -164,11 +127,8 @@ namespace SchetsEditor
 
             schetscontrol = new SchetsControl();
             
-            //schetscontrol.Location = new Point(64, 10);
             schetscontrol.MouseDown += (object o, MouseEventArgs mea) =>
                                        {
-                                           //this.UndoRedoController.addState((Bitmap)this.schetscontrol.Schets.tekening.Clone());
-
                                            vast = true;  
                                            huidigeTool.MuisVast(schetscontrol, mea.Location); 
                                        };
@@ -188,7 +148,7 @@ namespace SchetsEditor
                                        {   huidigeTool.Letter  (schetscontrol, kpea.KeyChar);
                                            if (kpea.KeyChar >= 32)
                                            {
-                                               //this.UndoRedoController.addState((Bitmap)this.schetscontrol.Schets.tekening.Clone());
+                                               //this.UndoRedoController.addCommand((Bitmap)this.schetscontrol.Schets.tekening.Clone());
                                            }
                                        };
             schetscontrol.Location = new Point(60, 30);
