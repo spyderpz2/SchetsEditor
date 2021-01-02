@@ -6,9 +6,10 @@ namespace SchetsEditor
 {
     public interface ISchetsTool
     {
+        
         void MuisVast(SchetsControl s, Point p);
         void MuisDrag(SchetsControl s, Point p);
-        void MuisLos(SchetsControl s, Point p);
+        void MuisLos(SchetsControl s, Point p, UndoRedoController u = null);
         void Letter(SchetsControl s, char c);
     }
 
@@ -20,7 +21,7 @@ namespace SchetsEditor
         public virtual void MuisVast(SchetsControl s, Point p)
         {   startpunt = p;
         }
-        public virtual void MuisLos(SchetsControl s, Point p)
+        public virtual void MuisLos(SchetsControl s, Point p, UndoRedoController u = null)
         {   kwast = new SolidBrush(s.PenKleur);
         }
         public abstract void MuisDrag(SchetsControl s, Point p);
@@ -72,18 +73,18 @@ namespace SchetsEditor
         {   s.Refresh();
             this.Bezig(s.CreateGraphics(), this.startpunt, p);
         }
-        public override void MuisLos(SchetsControl s, Point p)
-        {   base.MuisLos(s, p);
-            this.Compleet(s.MaakBitmapGraphics(), this.startpunt, p);
+        public override void MuisLos(SchetsControl s, Point p, UndoRedoController u = null)
+        {   base.MuisLos(s, p, u);
+            this.Compleet(u, s.MaakBitmapGraphics(), this.startpunt, p);
             s.Invalidate();
         }
         public override void Letter(SchetsControl s, char c)
         {
         }
-        public abstract void Bezig(Graphics g, Point p1, Point p2);
+        public abstract void Bezig(Graphics g, Point p1, Point p2, UndoRedoController u = null);
         
-        public virtual void Compleet(Graphics g, Point p1, Point p2)
-        {   this.Bezig(g, p1, p2);
+        public virtual void Compleet(UndoRedoController u, Graphics g, Point p1, Point p2)
+        {   this.Bezig(g, p1, p2, u);
         }
     }
 
@@ -91,8 +92,10 @@ namespace SchetsEditor
     {
         public override string ToString() { return "kader"; }
 
-        public override void Bezig(Graphics g, Point p1, Point p2)
+        public override void Bezig(Graphics g, Point p1, Point p2, UndoRedoController u = null)
         {   g.DrawRectangle(MaakPen(kwast,3), TweepuntTool.Punten2Rechthoek(p1, p2));
+            
+            
         }
     }
     
@@ -100,8 +103,11 @@ namespace SchetsEditor
     {
         public override string ToString() { return "vlak"; }
 
-        public override void Compleet(Graphics g, Point p1, Point p2)
+        public override void Compleet(UndoRedoController u, Graphics g, Point p1, Point p2)
+
         {   g.FillRectangle(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
+            //THIS HAS TO BE CHANGED TO ACTUAL ELEMENT LIST
+            u.test += 1;
         }
     }
 
@@ -109,7 +115,7 @@ namespace SchetsEditor
     {
         public override string ToString() { return "lijn"; }
 
-        public override void Bezig(Graphics g, Point p1, Point p2)
+        public override void Bezig(Graphics g, Point p1, Point p2, UndoRedoController u = null)
         {   g.DrawLine(MaakPen(this.kwast,3), p1, p2);
         }
     }
@@ -128,7 +134,7 @@ namespace SchetsEditor
     {
         public override string ToString() { return "gum"; }
 
-        public override void Bezig(Graphics g, Point p1, Point p2)
+        public override void Bezig( Graphics g, Point p1, Point p2, UndoRedoController u = null)
         {   g.DrawLine(MaakPen(Brushes.White, 7), p1, p2);
             // g.Save();
         }

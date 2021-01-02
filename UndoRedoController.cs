@@ -8,6 +8,7 @@ namespace SchetsEditor
 
         private Stack<Bitmap> UndoList = new Stack<Bitmap>();
         private Stack<Bitmap> RedoList = new Stack<Bitmap>();
+        public int test = 0;
 
         public void addState(Bitmap state)
         {

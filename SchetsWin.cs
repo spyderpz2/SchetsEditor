@@ -98,7 +98,7 @@ namespace SchetsEditor
             {
                 this.UndoRedoController.addState((Bitmap)this.schetscontrol.Schets.tekening.Clone());
             }
-
+            Console.WriteLine(this.UndoRedoController.test);
 
             this.schetscontrol.Schets.bitmap = this.UndoRedoController.undo();
             this.schetscontrol.Refresh();
@@ -150,7 +150,7 @@ namespace SchetsEditor
                                        {
                                            if (vast)
                                            {
-                                               huidigeTool.MuisLos(schetscontrol, mea.Location);
+                                               huidigeTool.MuisLos(schetscontrol, mea.Location, this.UndoRedoController);
                                                vast = false;
                                            }
                                        };
@@ -166,7 +166,6 @@ namespace SchetsEditor
             this.Controls.Add(schetscontrol);
 
             menuStrip = new MenuStrip();
-            
             this.maakFileMenu();
             this.maakToolMenu(deTools);
             this.maakAktieMenu(deKleuren);
