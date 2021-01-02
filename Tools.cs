@@ -94,8 +94,11 @@ namespace SchetsEditor
 
         public override void Bezig(Graphics g, Point p1, Point p2, UndoRedoController u = null)
         {   g.DrawRectangle(MaakPen(kwast,3), TweepuntTool.Punten2Rechthoek(p1, p2));
-            
-            
+            if (u != null)
+            {
+                u.addState(new DrawnElement(ElementType.RechthoekOpen, ((SolidBrush)kwast).Color, p1, p2, 3));
+            }
+
         }
     }
     
@@ -107,7 +110,7 @@ namespace SchetsEditor
 
         {   g.FillRectangle(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
             //THIS HAS TO BE CHANGED TO ACTUAL ELEMENT LIST
-            u.test += 1;
+            u.addState(new DrawnElement(ElementType.RechthoekDicht, ((SolidBrush)kwast).Color, p1, p2, 3));
         }
     }
 
@@ -117,6 +120,10 @@ namespace SchetsEditor
 
         public override void Bezig(Graphics g, Point p1, Point p2, UndoRedoController u = null)
         {   g.DrawLine(MaakPen(this.kwast,3), p1, p2);
+            if (u != null)
+            {
+                u.addState(new DrawnElement(ElementType.Lijn, ((SolidBrush)this.kwast).Color, p1, p2, 3));
+            }
         }
     }
 
@@ -136,7 +143,6 @@ namespace SchetsEditor
 
         public override void Bezig( Graphics g, Point p1, Point p2, UndoRedoController u = null)
         {   g.DrawLine(MaakPen(Brushes.White, 7), p1, p2);
-            // g.Save();
         }
     }
 }
