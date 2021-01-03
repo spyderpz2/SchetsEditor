@@ -118,6 +118,27 @@ namespace SchetsEditor
         }
     }
 
+    public class EllipseTool : TweepuntTool
+    {
+        public override string ToString() { return "ellipse"; }
+
+        public override void Bezig(Graphics g, Point p1, Point p2, UndoRedoController u = null)
+        {
+            g.DrawEllipse(MaakPen(kwast, 3), TweepuntTool.Punten2Rechthoek(p1, p2));
+
+        }
+    }
+    public class VolEllipseTool : EllipseTool
+    {
+        public override string ToString() { return "volellipse"; }
+
+        public override void Compleet(UndoRedoController u, Graphics g, Point p1, Point p2)
+
+        {
+            g.FillEllipse(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
+
+        }
+    }
     public class LijnTool : TweepuntTool
     {
         public override string ToString() { return "lijn"; }

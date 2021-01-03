@@ -116,6 +116,8 @@ namespace SchetsEditor
                                     , new LijnTool()
                                     , new RechthoekTool()
                                     , new VolRechthoekTool()
+                                    , new EllipseTool()
+                                    , new VolEllipseTool()
                                     , new TekstTool()
                                     , new GumTool()
                                     };
@@ -208,8 +210,8 @@ namespace SchetsEditor
             {
                 RadioButton b = new RadioButton();
                 b.Appearance = Appearance.Button;
-                b.Size = new Size(45, 62);
-                b.Location = new Point(10, 30 + t * 62);
+                b.Size = new Size(45, 70);
+                b.Location = new Point(10, 30 + t * 70);
                 b.Tag = tool;
                 b.Text = tool.ToString();
                 b.Image = (Image)resourcemanager.GetObject(tool.ToString());
