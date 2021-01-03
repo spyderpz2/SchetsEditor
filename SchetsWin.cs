@@ -101,6 +101,7 @@ namespace SchetsEditor
 
         private void redo(object obj, EventArgs ea) 
         {
+            this.schetscontrol.Schets.Schoon();
             this.UndoRedoController.redo().drawElements(this.schetscontrol.MaakBitmapGraphics());
             this.schetscontrol.Refresh();
         }
@@ -133,8 +134,8 @@ namespace SchetsEditor
                                            huidigeTool.MuisVast(schetscontrol, mea.Location); 
                                        };
             schetscontrol.MouseMove += (object o, MouseEventArgs mea) =>
-                                       {   if (vast)
-                                           huidigeTool.MuisDrag(schetscontrol, mea.Location); 
+                                       {  if (vast)
+                                          huidigeTool.MuisDrag(schetscontrol, mea.Location);
                                        };
             schetscontrol.MouseUp   += (object o, MouseEventArgs mea) =>
                                        {
@@ -145,11 +146,7 @@ namespace SchetsEditor
                                            }
                                        };
             schetscontrol.KeyPress +=  (object o, KeyPressEventArgs kpea) => 
-                                       {   huidigeTool.Letter  (schetscontrol, kpea.KeyChar);
-                                           if (kpea.KeyChar >= 32)
-                                           {
-                                               //this.UndoRedoController.addCommand((Bitmap)this.schetscontrol.Schets.tekening.Clone());
-                                           }
+                                       {   huidigeTool.Letter(schetscontrol, kpea.KeyChar, this.UndoRedoController);
                                        };
             schetscontrol.Location = new Point(60, 30);
             schetscontrol.Size = new Size(this.ClientSize.Width, this.ClientSize.Height);
