@@ -94,21 +94,15 @@ namespace SchetsEditor
 
         private void undo(object obj, EventArgs ea)
         {
-            if (this.UndoRedoController.noneUndoRedoYet())
-            {
-                this.UndoRedoController.addState((Bitmap)this.schetscontrol.Schets.tekening.Clone());
-            }
-            Console.WriteLine(this.UndoRedoController.test);
-
-            this.schetscontrol.Schets.bitmap = this.UndoRedoController.undo();
+            this.schetscontrol.Schets.Schoon();
+            this.UndoRedoController.undo().drawElements(this.schetscontrol.MaakBitmapGraphics());
             this.schetscontrol.Refresh();
-
-
         }
 
         private void redo(object obj, EventArgs ea) 
         {
-            this.schetscontrol.Schets.bitmap = this.UndoRedoController.redo();
+            this.schetscontrol.Schets.Schoon();
+            this.UndoRedoController.redo().drawElements(this.schetscontrol.MaakBitmapGraphics());
             this.schetscontrol.Refresh();
         }
 
@@ -136,17 +130,14 @@ namespace SchetsEditor
 
             schetscontrol = new SchetsControl();
             
-            //schetscontrol.Location = new Point(64, 10);
             schetscontrol.MouseDown += (object o, MouseEventArgs mea) =>
                                        {
-                                           this.UndoRedoController.addState((Bitmap)this.schetscontrol.Schets.tekening.Clone());
-
                                            vast = true;  
                                            huidigeTool.MuisVast(schetscontrol, mea.Location); 
                                        };
             schetscontrol.MouseMove += (object o, MouseEventArgs mea) =>
-                                       {   if (vast)
-                                           huidigeTool.MuisDrag(schetscontrol, mea.Location); 
+                                       {  if (vast)
+                                          huidigeTool.MuisDrag(schetscontrol, mea.Location);
                                        };
             schetscontrol.MouseUp   += (object o, MouseEventArgs mea) =>
                                        {
@@ -157,11 +148,7 @@ namespace SchetsEditor
                                            }
                                        };
             schetscontrol.KeyPress +=  (object o, KeyPressEventArgs kpea) => 
-                                       {   huidigeTool.Letter  (schetscontrol, kpea.KeyChar);
-                                           if (kpea.KeyChar >= 32)
-                                           {
-                                               this.UndoRedoController.addState((Bitmap)this.schetscontrol.Schets.tekening.Clone());
-                                           }
+                                       {   huidigeTool.Letter(schetscontrol, kpea.KeyChar, this.UndoRedoController);
                                        };
             schetscontrol.Location = new Point(60, 30);
             schetscontrol.Size = new Size(this.ClientSize.Width, this.ClientSize.Height);
