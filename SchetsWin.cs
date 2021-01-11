@@ -7,10 +7,8 @@ using System.Resources;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Security;
-using System.Text;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading.Tasks;
 
 namespace SchetsEditor
 {
@@ -107,7 +105,7 @@ namespace SchetsEditor
         //Not finished yet.
         private void ser()
         {
-            Stack<DrawInstuction> obj = this.UndoRedoController.getElements();//new DrawInstuction(ElementType.RechthoekOpen, Color.Black, new Point(50, 50), new Point(100, 100), 4);
+            List<DrawInstuction> obj = this.UndoRedoController.getElements();//new DrawInstuction(ElementType.DrawRectangle, Color.Black, new Point(50, 50), new Point(100, 100), 4);
             IFormatter formatter = new BinaryFormatter();
             Stream stream = new FileStream(@"C:\Users\Michiel Schouten\Desktop\hallo.txt", FileMode.Append, FileAccess.Write);
 

@@ -101,7 +101,7 @@ namespace SchetsEditor
         public override void Bezig(Graphics g, Point p1, Point p2, UndoRedoController u = null)
         {   g.DrawRectangle(MaakPen(kwast,3), TweepuntTool.Punten2Rechthoek(p1, p2));
             if (u != null)
-                u.addInstruction(new DrawInstuction(ElementType.RechthoekOpen, ((SolidBrush)kwast).Color, p1, p2, 3));
+                u.addInstruction(new DrawInstuction(ElementType.DrawRectangle, ((SolidBrush)kwast).Color, p1, p2, 3));
         }
     }
     
@@ -111,7 +111,7 @@ namespace SchetsEditor
 
         public override void Compleet(UndoRedoController u, Graphics g, Point p1, Point p2)
         {   g.FillRectangle(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
-            u.addInstruction(new DrawInstuction(ElementType.RechthoekDicht, ((SolidBrush)kwast).Color, p1, p2));
+            u.addInstruction(new DrawInstuction(ElementType.FillRectangle, ((SolidBrush)kwast).Color, p1, p2));
         }
     }
 
@@ -123,7 +123,7 @@ namespace SchetsEditor
         {
             g.DrawEllipse(MaakPen(kwast, 3), TweepuntTool.Punten2Rechthoek(p1, p2));
             if(u != null)
-                u.addInstruction(new DrawInstuction(ElementType.ElipseOpen, ((SolidBrush)kwast).Color, p1, p2, 3));
+                u.addInstruction(new DrawInstuction(ElementType.DrawEllipse, ((SolidBrush)kwast).Color, p1, p2, 3));
         }
     }
     public class VolEllipseTool : EllipseTool
@@ -133,7 +133,7 @@ namespace SchetsEditor
         public override void Compleet(UndoRedoController u, Graphics g, Point p1, Point p2)
         {
             g.FillEllipse(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
-            u.addInstruction(new DrawInstuction(ElementType.ElipseDicht, ((SolidBrush)kwast).Color, p1, p2));
+            u.addInstruction(new DrawInstuction(ElementType.FillEllipse, ((SolidBrush)kwast).Color, p1, p2));
         }
     }
     public class LijnTool : TweepuntTool
@@ -158,7 +158,7 @@ namespace SchetsEditor
                 }
                 else //This means its just a normal straight line.
                 {
-                    u.addInstruction(new DrawInstuction(ElementType.Lijn, ((SolidBrush)this.kwast).Color, p1, p2, 3));
+                    u.addInstruction(new DrawInstuction(ElementType.Line, ((SolidBrush)this.kwast).Color, p1, p2, 3));
                 }
             }
         }

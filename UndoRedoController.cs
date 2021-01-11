@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace SchetsEditor
@@ -13,11 +12,11 @@ namespace SchetsEditor
         /// <summary>
         /// The list containing all of the current `DrawInstuction`s.
         /// </summary>
-        private Stack<DrawInstuction> UndoList = new Stack<DrawInstuction>();
+        private List<DrawInstuction> UndoList = new List<DrawInstuction>();
         /// <summary>
         /// The list containing all of the elements that can be redone, only being filled after calling `undo()` method.
         /// </summary>
-        private Stack<DrawInstuction> RedoList = new Stack<DrawInstuction>();
+        private List<DrawInstuction> RedoList = new List<DrawInstuction>();
 
         /// <summary>
         /// Adds the drawing instruction to the `UndoList` so it can be retrieved later.
@@ -26,17 +25,17 @@ namespace SchetsEditor
         public void addInstruction(DrawInstuction instruction)
         {
             // Save the snapshot.
-            UndoList.Push(instruction);
+            UndoList.Add(instruction);
             //Console.WriteLine("hallo?");
             
             // Empty the redo list.
             if (RedoList.Count > 0)
             {
-                RedoList = new Stack<DrawInstuction>();
+                RedoList = new List<DrawInstuction>();
             }
         }
 
-        public Stack<DrawInstuction> getElements()
+        public List<DrawInstuction> getElements()
         {
             return this.UndoList;
         }
@@ -45,26 +44,26 @@ namespace SchetsEditor
         /// Undoes a 'commit' or drawing action made by the user. E.g. it removes the last drawing from the list.
         /// </summary>
         /// <returns>The remaining drawing instructions in Reverse order e.g. the order they were drawn in</returns>
-        public Stack<DrawInstuction> undo()
+        public List<DrawInstuction> undo()
         {
             // Move the most recent change to the redo list.
             if (UndoList.Count != 0)
             {
-                RedoList.Push(UndoList.Pop());
+                RedoList.Add(UndoList.Pop());
             }
-            return UndoList.Reverse();
+            return UndoList.CustomReverse();
         }
 
         /// <summary>
         /// Redoes a 'commit' or drawing action made by the user. E.g. it adds the n-last drawing from the RedoList to the UndoList.
         /// </summary>
         /// <returns>The remaining drawing instructions in the order they were drawn in</returns>
-        public Stack<DrawInstuction> redo()
+        public List<DrawInstuction> redo()
         {
             // Move the most recently undone item back to the undo list.
             if (RedoList.Count != 0)
             {
-                UndoList.Push(RedoList.Pop());
+                UndoList.Add(RedoList.Pop());
             }
             return UndoList;
         }
@@ -80,7 +79,7 @@ namespace SchetsEditor
         /// <summary>
         /// Assign the values of the draw instruction to each corresponding variable
         /// </summary>
-        /// <param name="elType">The type of the drawing instruction e.g. FillRectangle would be ElementType.RechthoekDicht</param>
+        /// <param name="elType">The type of the drawing instruction e.g. DrawRectangle would be ElementType.FillRectangle</param>
         /// <param name="elKleur">The color of the element to draw.</param>
         /// <param name="elStartPunt">The startingpoint of the element to draw.</param>
         /// <param name="elEindPunt">The endpoint of the element to draw.</param>
@@ -149,11 +148,11 @@ namespace SchetsEditor
     public enum ElementType
     {
         Pen,
-        Lijn,
-        RechthoekOpen,
-        RechthoekDicht,
-        ElipseOpen,
-        ElipseDicht,
+        Line,
+        DrawRectangle,
+        FillRectangle,
+        DrawEllipse,
+        FillEllipse,
         Tekst
     }
 
@@ -164,7 +163,7 @@ namespace SchetsEditor
         /// </summary>
         /// <param name="elStack">The stack of `DrawInstuction` to be returned as a contious string.</param>
         /// <returns>String the elements in elStack to string with "\n" in between</returns>
-        public static string ToString(this Stack<DrawInstuction> elStack)
+        public static string ToString(this List<DrawInstuction> elStack)
         {
             string toReturn = "";
             foreach (DrawInstuction el in elStack)
@@ -172,17 +171,25 @@ namespace SchetsEditor
             return toReturn;
         }
 
+        public static DrawInstuction Pop(this List<DrawInstuction> elements)
+        {
+            DrawInstuction lastElement = elements[elements.Count - 1];
+            elements.RemoveAt(elements.Count - 1);
+            return lastElement;
+        }
+
+
 
         /// <summary>
         /// Reverses the stack of `DrawInstuction`. First becomes last element and vice versa.
         /// </summary>
         /// <param name="elStack">The stack of `DrawInstuction` to be returned in Reverse order.</param>
         /// <returns>`Stack<DrawInstuction>`: elStack in Reverse order.</returns>
-        public static Stack<DrawInstuction> Reverse(this Stack<DrawInstuction> elStack)
+        public static List<DrawInstuction> CustomReverse(this List<DrawInstuction> elStack)
         {
-            Stack<DrawInstuction> drawOrder = new Stack<DrawInstuction>();
+            List<DrawInstuction> drawOrder = new List<DrawInstuction>();
             foreach (DrawInstuction el in elStack)
-                drawOrder.Push(el);
+                drawOrder.Add(el);
             return drawOrder;
         }
 
@@ -191,7 +198,7 @@ namespace SchetsEditor
         /// </summary>
         /// <param name="elStack">The stack of `DrawInstuction` to be drawn</param>
         /// <param name="toDrawOn">The `Graphics` object to be drawn on.</param>
-        public static void DrawElements(this Stack<DrawInstuction> elStack, Graphics toDrawOn)
+        public static void DrawElements(this List<DrawInstuction> elStack, Graphics toDrawOn)
         {
             using (toDrawOn)
             {
@@ -207,19 +214,19 @@ namespace SchetsEditor
                                 lastPoint = pointOnLine;
                             }
                             break;
-                        case ElementType.Lijn:
+                        case ElementType.Line:
                             toDrawOn.DrawLine(elToDraw.CreatePen(), elToDraw.startPunt, elToDraw.eindPunt);
                             break;
-                        case ElementType.RechthoekOpen:
+                        case ElementType.DrawRectangle:
                             toDrawOn.DrawRectangle(elToDraw.CreatePen(), elToDraw.ToRectangle());
                             break;
-                        case ElementType.RechthoekDicht:
+                        case ElementType.FillRectangle:
                             toDrawOn.FillRectangle(elToDraw.CreateBrush(), elToDraw.ToRectangle());
                             break;
-                        case ElementType.ElipseOpen:
+                        case ElementType.DrawEllipse:
                             toDrawOn.DrawEllipse(elToDraw.CreatePen(), elToDraw.ToRectangle());
                             break;
-                        case ElementType.ElipseDicht:
+                        case ElementType.FillEllipse:
                             toDrawOn.FillEllipse(elToDraw.CreateBrush(), elToDraw.ToRectangle());
                             break;
                         case ElementType.Tekst:
