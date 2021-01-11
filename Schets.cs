@@ -8,10 +8,16 @@ namespace SchetsEditor
     public class Schets
     {
         public Bitmap bitmap;
-
-        public Schets()
+        private Bitmap baseBitmap;
+        public Schets(Bitmap openMetBitmap = null)
         {
-            bitmap = new Bitmap(1, 1);
+            bitmap = openMetBitmap != null ? openMetBitmap : new Bitmap(1, 1);
+            if (openMetBitmap != null)
+            {
+                bitmap = openMetBitmap;
+                baseBitmap = (Bitmap)openMetBitmap.Clone();
+                //this.VeranderAfmeting(new Size(openMetBitmap.Width, openMetBitmap.Height));
+            }
         }
         public Graphics BitmapGraphics
         {
@@ -26,12 +32,22 @@ namespace SchetsEditor
 
         public void VeranderAfmeting(Size sz)
         {
+            if (this.baseBitmap != null)
+            {
+                if (this.baseBitmap.Width < sz.Width || this.baseBitmap.Height < sz.Height)
+                {
+                    Console.WriteLine("fix dit ff"); 
+                }
+
+            }
+
             if (sz.Width > bitmap.Size.Width || sz.Height > bitmap.Size.Height)
             {
                 Bitmap nieuw = new Bitmap( Math.Max(sz.Width,  bitmap.Size.Width)
                                          , Math.Max(sz.Height, bitmap.Size.Height)
                                          );
                 Graphics gr = Graphics.FromImage(nieuw);
+                gr.SmoothingMode = SmoothingMode.AntiAlias;
                 //Hier kunnen we eventueel de background color bepalen...
                 gr.FillRectangle(Brushes.White, 0, 0, sz.Width, sz.Height);
                 gr.DrawImage(bitmap, 0, 0);
@@ -44,9 +60,17 @@ namespace SchetsEditor
         }
         public void Schoon()
         {
-            Graphics gr = Graphics.FromImage(bitmap);
-            gr.FillRectangle(Brushes.White, 0, 0, bitmap.Width, bitmap.Height);
+            if (baseBitmap != null)
+            {
+                this.tekening = (Bitmap)baseBitmap.Clone();
+            } else
+            {
+                Graphics gr = Graphics.FromImage(bitmap);
+                gr.SmoothingMode = SmoothingMode.AntiAlias;
+                gr.FillRectangle(Brushes.White, 0, 0, bitmap.Width, bitmap.Height);
+            }
         }
+
         public void Roteer()
         {
             bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);

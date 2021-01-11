@@ -1,5 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace SchetsEditor
 {
@@ -39,7 +44,7 @@ namespace SchetsEditor
         /// <summary>
         /// Undoes a 'commit' or drawing action made by the user. E.g. it removes the last drawing from the list.
         /// </summary>
-        /// <returns>The remaining drawing instructions in reverse order e.g. the order they were drawn in</returns>
+        /// <returns>The remaining drawing instructions in Reverse order e.g. the order they were drawn in</returns>
         public Stack<DrawInstuction> undo()
         {
             // Move the most recent change to the redo list.
@@ -47,7 +52,7 @@ namespace SchetsEditor
             {
                 RedoList.Push(UndoList.Pop());
             }
-            return UndoList.reverse();
+            return UndoList.Reverse();
         }
 
         /// <summary>
@@ -69,6 +74,7 @@ namespace SchetsEditor
     /// <summary>
     /// Holds all the information to recreate a drawing action by the user.
     /// </summary>
+    [Serializable]
     public struct DrawInstuction
     {
         /// <summary>
@@ -158,7 +164,7 @@ namespace SchetsEditor
         /// </summary>
         /// <param name="elStack">The stack of `DrawInstuction` to be returned as a contious string.</param>
         /// <returns>String the elements in elStack to string with "\n" in between</returns>
-        public static string toString(this Stack<DrawInstuction> elStack)
+        public static string ToString(this Stack<DrawInstuction> elStack)
         {
             string toReturn = "";
             foreach (DrawInstuction el in elStack)
@@ -166,12 +172,13 @@ namespace SchetsEditor
             return toReturn;
         }
 
+
         /// <summary>
         /// Reverses the stack of `DrawInstuction`. First becomes last element and vice versa.
         /// </summary>
-        /// <param name="elStack">The stack of `DrawInstuction` to be returned in reverse order.</param>
-        /// <returns>`Stack<DrawInstuction>`: elStack in reverse order.</returns>
-        public static Stack<DrawInstuction> reverse(this Stack<DrawInstuction> elStack)
+        /// <param name="elStack">The stack of `DrawInstuction` to be returned in Reverse order.</param>
+        /// <returns>`Stack<DrawInstuction>`: elStack in Reverse order.</returns>
+        public static Stack<DrawInstuction> Reverse(this Stack<DrawInstuction> elStack)
         {
             Stack<DrawInstuction> drawOrder = new Stack<DrawInstuction>();
             foreach (DrawInstuction el in elStack)
@@ -184,7 +191,7 @@ namespace SchetsEditor
         /// </summary>
         /// <param name="elStack">The stack of `DrawInstuction` to be drawn</param>
         /// <param name="toDrawOn">The `Graphics` object to be drawn on.</param>
-        public static void drawElements(this Stack<DrawInstuction> elStack, Graphics toDrawOn)
+        public static void DrawElements(this Stack<DrawInstuction> elStack, Graphics toDrawOn)
         {
             using (toDrawOn)
             {
@@ -225,7 +232,25 @@ namespace SchetsEditor
             }
         }
 
+        //https://stackoverflow.com/a/10502856/8902440
+        public static byte[] ToByteArray(this object obj)
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            using (var ms = new MemoryStream())
+            {
+                bf.Serialize(ms, obj);
+                return ms.ToArray();
+            }
+        }
 
+        //https://stackoverflow.com/a/800469/8902440
+        public static string GetHash(this byte[] data)
+        {
+            using (var sha1 = new System.Security.Cryptography.SHA1CryptoServiceProvider())
+            {
+                return string.Concat(sha1.ComputeHash(data).Select(x => x.ToString("X2")));
+            }
+        }
     }
 
 }
