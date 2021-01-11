@@ -5,8 +5,10 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Resources;
 using System.Drawing.Imaging;
-using System.Drawing.Drawing2D;
 using System.IO;
+using System.Security;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace SchetsEditor
 {
@@ -18,6 +20,8 @@ namespace SchetsEditor
         ISchetsTool huidigeTool;
         Panel paneel;
         bool vast;
+        string lastDrawHash;
+
 
         ResourceManager resourcemanager
             = new ResourceManager("SchetsEditor.Properties.Resources"
@@ -47,6 +51,37 @@ namespace SchetsEditor
             new SchetsWin().Show();
         }
 
+        private void openFile(object obj, EventArgs ea)
+        {
+            using (OpenFileDialog openDialog = new OpenFileDialog())
+            {
+                openDialog.Filter = "Alle plaatjes | *.png;*.gif;*.bmp;*.jpg;*.jpeg";
+                openDialog.FilterIndex = 1;
+                openDialog.RestoreDirectory = true;
+                openDialog.ValidateNames = true;
+                openDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+                openDialog.Title = "Open een plaatje om te bewerken";
+
+                if (openDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        var sr = new StreamReader(openDialog.FileName);
+                        Stream str = sr.BaseStream;
+                        Bitmap openedImage = new Bitmap(str);
+                        new SchetsWin(openedImage).Show();
+                    }
+                    catch (SecurityException ex)
+                    {
+                        MessageBox.Show($"Security error.\n\nError message: {ex.Message}\n\n" +
+                        $"Details:\n\n{ex.StackTrace}");
+                    }
+                }
+            }
+
+            
+        }
+
         private void opslaan(object obj, EventArgs ea)
         {
             Bitmap tekening = this.schetscontrol.Schets.tekening;
@@ -57,12 +92,28 @@ namespace SchetsEditor
                 {
                     byte[] bitmapBytes = tekening.ToByteArray(this.getImageFormatFromFile(new FileInfo(this.bestandsNaam)));
                     File.WriteAllBytes(this.bestandsNaam, bitmapBytes);
+                    this.lastDrawHash = this.UndoRedoController.getElements().ToByteArray().GetHash();
                     return;
                 }
             }
+            this.lastDrawHash = this.UndoRedoController.getElements().ToByteArray().GetHash();
 
             SaveFile(tekening, "Sla tekening op");
         }
+
+
+        //Not finished yet.
+        private void ser()
+        {
+            List<DrawInstuction> obj = this.UndoRedoController.getElements();//new DrawInstuction(ElementType.DrawRectangle, Color.Black, new Point(50, 50), new Point(100, 100), 4);
+            IFormatter formatter = new BinaryFormatter();
+            Stream stream = new FileStream(@"C:\Users\Michiel Schouten\Desktop\hallo.txt", FileMode.Append, FileAccess.Write);
+
+            formatter.Serialize(stream, obj);
+            stream.Close();
+        }
+
+
 
         private ImageFormat getImageFormatFromFile(FileInfo fileInfo)
         {
@@ -84,30 +135,51 @@ namespace SchetsEditor
         private void opslaanAls(object obj, EventArgs ea)
         {
             Bitmap tekening = this.schetscontrol.Schets.tekening;
-            SaveFile(tekening, "Sla tekening op als");
+            SaveFile(tekening, "&Sla tekening op als...");
         }
 
         private void afsluiten(object obj, EventArgs ea)
-        {
-            this.Close();
+        {               
+            //Check if the hashes are the same or not, thus whether the current drawing was saved.
+            if (this.UndoRedoController.getElements().ToByteArray().GetHash() != this.lastDrawHash)
+            {       
+                Console.WriteLine("er waren wel wijzigingen");
+                string message = "Sommige wijzigingen zijn nog niet opgeslagen, wil je deze opslaan alvorens af te sluiten?";
+                string title = "Onopgeslagen werk";
+                MessageBoxButtons buttons = MessageBoxButtons.YesNoCancel;
+                DialogResult result = MessageBox.Show(message, title, buttons,
+                MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2,
+                MessageBoxOptions.RightAlign, false);
+                if (result == DialogResult.Yes)
+                    this.opslaan(null, null);
+                else if (result == DialogResult.No)
+                    this.Close();
+                else
+                    Console.WriteLine("nou niks"); 
+            }
+            else
+            {
+                Console.WriteLine("geen wijzigingen");
+                this.Close();
+            }
         }
 
         private void undo(object obj, EventArgs ea)
         {
             this.schetscontrol.Schets.Schoon();
-            this.UndoRedoController.undo().drawElements(this.schetscontrol.MaakBitmapGraphics());
+            this.UndoRedoController.undo().DrawElements(this.schetscontrol.MaakBitmapGraphics());
             this.schetscontrol.Refresh();
         }
 
         private void redo(object obj, EventArgs ea) 
         {
             this.schetscontrol.Schets.Schoon();
-            this.UndoRedoController.redo().drawElements(this.schetscontrol.MaakBitmapGraphics());
+            this.UndoRedoController.redo().DrawElements(this.schetscontrol.MaakBitmapGraphics());
             this.schetscontrol.Refresh();
         }
 
 
-        public SchetsWin()
+        public SchetsWin(Bitmap openMetBitmap = null)
         {
             this.KeyPreview = true;
             this.KeyDown += new KeyEventHandler(SchetsWinKeyDown);
@@ -128,7 +200,7 @@ namespace SchetsEditor
             this.ClientSize = new Size(800, 600);
             huidigeTool = deTools[0];
 
-            schetscontrol = new SchetsControl();
+            schetscontrol = openMetBitmap != null ? new SchetsControl(openMetBitmap) : new SchetsControl();
             
             schetscontrol.MouseDown += (object o, MouseEventArgs mea) =>
                                        {
@@ -154,8 +226,11 @@ namespace SchetsEditor
             schetscontrol.Size = new Size(this.ClientSize.Width, this.ClientSize.Height);
             this.Controls.Add(schetscontrol);
 
+            
+
+
             menuStrip = new MenuStrip();
-            this.maakFileMenu();
+            menuStrip.Items.Add(this.maakFileMenu());
             this.maakToolMenu(deTools);
             this.maakAktieMenu(deKleuren);
             this.maakToolButtons(deTools);
@@ -166,15 +241,26 @@ namespace SchetsEditor
             this.Controls.Add(menuStrip);
         }
 
-        private void maakFileMenu()
+        private ToolStripMenuItem maakFileMenu()
         {   
-            ToolStripMenuItem menu = new ToolStripMenuItem("File");
-            menu.MergeAction = MergeAction.MatchOnly;
-            menu.DropDownItems.Add("Nieuw", null, this.nieuweSchets);
-            menu.DropDownItems.Add("Opslaan", null, this.opslaan);
-            menu.DropDownItems.Add("Opslaan als...", null, this.opslaanAls);
-            menu.DropDownItems.Add("Sluiten", null, this.afsluiten);
-            menuStrip.Items.Add(menu);
+            ToolStripMenuItem TFile = new ToolStripMenuItem("&File");
+            TFile.DropDownItems.AddRange( new ToolStripItem[] { 
+                maakItem("&New", new EventHandler(nieuweSchets), Keys.Control | Keys.Shift | Keys.N), 
+                maakItem("&Open", new EventHandler(openFile), Keys.Control | Keys.O),
+                maakItem("&Save", new EventHandler(opslaan), Keys.Control | Keys.S),
+                maakItem("Save &As...", new EventHandler(opslaanAls), Keys.Control | Keys.Shift | Keys.S),
+                maakItem("E&xit", new EventHandler(afsluiten), Keys.Control | Keys.W)
+            } );
+            return TFile;
+
+        }
+
+        private static ToolStripMenuItem maakItem(String name, EventHandler toClick, Keys shortcut)
+        {
+            ToolStripMenuItem item = new ToolStripMenuItem(name);
+            item.Click += toClick;
+            item.ShortcutKeys = shortcut;
+            return item;
         }
 
         private void maakToolMenu(ICollection<ISchetsTool> tools)
@@ -289,6 +375,15 @@ namespace SchetsEditor
                 // Your code to execute when shortcut Ctrl+Y happens here
                 Console.WriteLine("redo?");
                 this.redo(null, null);
+            }
+            else if (e.Control && e.KeyCode == Keys.O)
+            {
+                Console.WriteLine("Open file");
+                this.openFile(null, null);
+            }
+            else if (e.Control && e.KeyCode == Keys.W)
+            {
+                this.afsluiten(null, null);
             }
         }
 

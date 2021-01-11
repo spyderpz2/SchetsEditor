@@ -15,9 +15,21 @@ namespace SchetsEditor
         { get { return schets;   }
         }
 
-        public SchetsControl()
+        public SchetsControl(Bitmap openMetBitmap = null)
         {   this.BorderStyle = BorderStyle.Fixed3D;
-            this.schets = new Schets();
+
+            this.schets = openMetBitmap != null ? new Schets(openMetBitmap) : new Schets();
+            if (openMetBitmap != null)
+            {
+                this.schets = new Schets(openMetBitmap);
+                //schets.VeranderAfmeting(openMetBitmap.Size);
+            }
+            else
+            {
+                this.schets = new Schets();
+            }
+
+
             this.Paint += this.teken;
             this.Resize += this.veranderAfmeting;
             this.veranderAfmeting(null, null);
