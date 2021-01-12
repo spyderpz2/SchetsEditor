@@ -153,7 +153,7 @@ namespace SchetsEditor
                 if (this.penLijn.Count > 0) //Check whether there are points in the stack, if so then it was drawn with the Pentool.
                 {
                     ///Could maybe split the penLijn to multiple smaller points.
-                    u.addInstruction(new DrawInstuction(ElementType.Pen, ((SolidBrush)this.kwast).Color, this.penLijn, 3));
+                    u.addInstruction(new DrawInstuction(ElementType.Pen, ((SolidBrush)this.kwast).Color, new List<Point>(this.penLijn), 3));
                     this.penLijn = new Stack<Point>();
                 }
                 else //This means its just a normal straight line.

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Xml.Serialization;
 
 namespace SchetsEditor
 {
@@ -102,7 +104,7 @@ namespace SchetsEditor
             letter = elChar;
         }
 
-        public DrawInstuction(ElementType elType, Color elKleur, Stack<Point> elPunten, int elLijnDikte = 3) : this()
+        public DrawInstuction(ElementType elType, Color elKleur, List<Point> elPunten, int elLijnDikte = 3) : this()
         {
             elementType = elType;
             kleur = elKleur;
@@ -111,14 +113,35 @@ namespace SchetsEditor
         }
 
 
-        public ElementType elementType { get; }
-        public Color kleur { get; }
-        public Point startPunt { get; }
+        public ElementType elementType { get; set; }
+        //public Color kleur { get; set; }
+        public Point startPunt { get; set; }
         public Point eindPunt { get; set; }
-        public int lijnDikte { get; }
-        public Font font { get; }
-        public char letter { get; }
-        public Stack<Point> puntenVanLijn { get; }
+        public int lijnDikte { get; set; }
+        public char letter { get; set; }
+        public List<Point> puntenVanLijn { get; set; }
+
+        //color should be ignored by xml serializer because it can't normally be serialized.
+        [XmlIgnore]
+        public Color kleur { get; set; }
+        //Fix the color serialization. Taken from: https://stackoverflow.com/a/12101050/8902440
+        [XmlElement("kleur")]
+        public int kleurAsArgb
+        {
+            get { return kleur.ToArgb(); }
+            set { kleur = Color.FromArgb(value); }
+        }
+
+        //font should be ingored by xml serializer because it can't normally be serialized.
+        [XmlIgnore()]
+        public Font font { get; set; }
+        //Fix the font serialization. Taken from: https://stackoverflow.com/a/34934422/8902440
+        [Browsable(false)]
+        public string FontSerialize
+        {
+            get { return TypeDescriptor.GetConverter(typeof(Font)).ConvertToInvariantString(font); }
+            set { font = TypeDescriptor.GetConverter(typeof(Font)).ConvertFromInvariantString(value) as Font; }
+        }
 
         /// <summary>
         /// Facilitates debugging. 
@@ -171,13 +194,17 @@ namespace SchetsEditor
             return toReturn;
         }
 
-        public static DrawInstuction Pop(this List<DrawInstuction> elements)
+        public static T Pop<T>(this List<T> elements)
         {
-            DrawInstuction lastElement = elements[elements.Count - 1];
+            T lastElement = elements[elements.Count - 1];
             elements.RemoveAt(elements.Count - 1);
             return lastElement;
         }
 
+        public static T Peek<T>(this List<T> elements)
+        {
+            return elements[elements.Count - 1];
+        }
 
 
         /// <summary>
@@ -185,10 +212,10 @@ namespace SchetsEditor
         /// </summary>
         /// <param name="elStack">The stack of `DrawInstuction` to be returned in Reverse order.</param>
         /// <returns>`Stack<DrawInstuction>`: elStack in Reverse order.</returns>
-        public static List<DrawInstuction> CustomReverse(this List<DrawInstuction> elStack)
+        public static List<T> CustomReverse<T>(this List<T> elStack)
         {
-            List<DrawInstuction> drawOrder = new List<DrawInstuction>();
-            foreach (DrawInstuction el in elStack)
+            List<T> drawOrder = new List<T>();
+            foreach (T el in elStack)
                 drawOrder.Add(el);
             return drawOrder;
         }
