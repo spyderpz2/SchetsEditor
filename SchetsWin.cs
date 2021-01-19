@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -7,10 +7,10 @@ using System.Resources;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Security;
-using System.Text;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading.Tasks;
+using System.Xml.Serialization;
+using System.Text;
 
 namespace SchetsEditor
 {
@@ -57,7 +57,7 @@ namespace SchetsEditor
         {
             using (OpenFileDialog openDialog = new OpenFileDialog())
             {
-                openDialog.Filter = "Alle plaatjes | *.png;*.gif;*.bmp;*.jpg;*.jpeg";
+                openDialog.Filter = "Paint ML | *.pml | Alle plaatjes | *.png;*.gif;*.bmp;*.jpg;*.jpeg";
                 openDialog.FilterIndex = 1;
                 openDialog.RestoreDirectory = true;
                 openDialog.ValidateNames = true;
@@ -70,8 +70,25 @@ namespace SchetsEditor
                     {
                         var sr = new StreamReader(openDialog.FileName);
                         Stream str = sr.BaseStream;
-                        Bitmap openedImage = new Bitmap(str);
-                        new SchetsWin(openedImage).Show();
+                        ImageFormat format = this.getImageFormatFromFile(new FileInfo(openDialog.FileName));
+                        if (format == ImageFormat.Emf)
+                        {
+                            string tekst = new StreamReader(str).ReadToEnd();
+                            Console.WriteLine("open");
+                            //Console.WriteLine(this.FromXML<List<DrawInstuction>>(tekst).ToString());
+                            List<DrawInstuction> final = this.FromXML<List<DrawInstuction>>(tekst);
+                            Console.WriteLine(final.Count);
+                            foreach (DrawInstuction instr in final)
+                            {
+                                Console.WriteLine(instr.ToString());
+                            }
+
+                        }
+                        else
+                        {
+                            Bitmap openedImage = new Bitmap(str);
+                            new SchetsWin(openedImage).Show();
+                        }
                     }
                     catch (SecurityException ex)
                     {
@@ -92,14 +109,24 @@ namespace SchetsEditor
             {
                 if (File.Exists(this.bestandsNaam))
                 {
-                    byte[] bitmapBytes = tekening.ToByteArray(this.getImageFormatFromFile(new FileInfo(this.bestandsNaam)));
-                    File.WriteAllBytes(this.bestandsNaam, bitmapBytes);
-                    this.lastDrawHash = this.UndoRedoController.getElements().ToByteArray().GetHash();
+                    ImageFormat format = this.getImageFormatFromFile(new FileInfo(this.bestandsNaam));
+                    List<DrawInstuction> instructions = this.UndoRedoController.getElements();
+                    if (format == ImageFormat.Emf)
+                    {
+                        //byte[] xmlBytes = instructions.ToByteArray();
+                        //File.WriteAllBytes(this.bestandsNaam, xmlBytes);
+                        File.WriteAllText(this.bestandsNaam, this.ToXML<DrawInstuction>(instructions), Encoding.UTF8);
+                    }
+                    else
+                    {
+                        byte[] bitmapBytes = tekening.ToByteArray(format);
+                        File.WriteAllBytes(this.bestandsNaam, bitmapBytes);
+                    }
+                    this.lastDrawHash = instructions.ToByteArray().GetHash();
                     return;
                 }
             }
-            this.lastDrawHash = this.UndoRedoController.getElements().ToByteArray().GetHash();
-
+            this.ser();
             SaveFile(tekening, "Sla tekening op");
         }
 
@@ -107,15 +134,34 @@ namespace SchetsEditor
         //Not finished yet.
         private void ser()
         {
-            Stack<DrawInstuction> obj = this.UndoRedoController.getElements();//new DrawInstuction(ElementType.RechthoekOpen, Color.Black, new Point(50, 50), new Point(100, 100), 4);
-            IFormatter formatter = new BinaryFormatter();
-            Stream stream = new FileStream(@"C:\Users\Michiel Schouten\Desktop\hallo.txt", FileMode.Append, FileAccess.Write);
-
-            formatter.Serialize(stream, obj);
-            stream.Close();
+            //List<DrawInstuction> obj = this.UndoRedoController.getElements();//new DrawInstuction(ElementType.DrawRectangle, Color.Black, new Point(50, 50), new Point(100, 100), 4);
+            using (StringWriter stringWriter = new StringWriter(new StringBuilder()))
+            {
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(Dictionary<String, List<DrawInstuction>>));
+                xmlSerializer.Serialize(stringWriter, this.UndoRedoController.getAll());
+                Console.WriteLine(stringWriter.ToString());
+            }
+            //Console.WriteLine(this.ToXML(this.UndoRedoController.getAll()));
         }
 
+        public T FromXML<T>(string xml)
+        {
+            using (StringReader stringReader = new StringReader(xml))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(T));
+                return (T)serializer.Deserialize(stringReader);
+            }
+        }
 
+        public string ToXML<T>(List<T> obj)
+        {
+            using (StringWriter stringWriter = new StringWriter(new StringBuilder()))
+            {
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<T>));
+                xmlSerializer.Serialize(stringWriter, obj);
+                return stringWriter.ToString();
+            }
+        }
 
         private ImageFormat getImageFormatFromFile(FileInfo fileInfo)
         {
@@ -129,6 +175,9 @@ namespace SchetsEditor
                     return ImageFormat.Jpeg;
                 case ".bmp":
                     return ImageFormat.Bmp;
+                case ".pml":
+                    //Use Emf as placeholder for our custom paint format. 
+                    return ImageFormat.Emf;
                 default:
                     return ImageFormat.Png;
             }
@@ -396,7 +445,7 @@ namespace SchetsEditor
             Stream myStream;
             using (SaveFileDialog opslaanDialog = new SaveFileDialog())
             {
-                opslaanDialog.Filter = "PNG | *.png | GIF | *.gif | BMP | *.bmp | JPEG | *.jpg; *.jpeg";
+                opslaanDialog.Filter = "Paint ML | *.pml | PNG | *.png | GIF | *.gif | BMP | *.bmp | JPEG | *.jpg; *.jpeg";
                 opslaanDialog.FilterIndex = 1;
                 opslaanDialog.RestoreDirectory = true;
                 opslaanDialog.DefaultExt = ".png";
@@ -420,8 +469,22 @@ namespace SchetsEditor
                             FileInfo bestandsInfo = new FileInfo(opslaanDialog.FileName);
                             this.bestandsNaam = opslaanDialog.FileName;
                             this.Text = bestandsInfo.Name;
-                            byte[] bitmapBytes = tekening.ToByteArray(this.getImageFormatFromFile(bestandsInfo));
-                            myStream.Write(bitmapBytes, 0, bitmapBytes.Length);
+                            ImageFormat extension = this.getImageFormatFromFile(bestandsInfo);
+                            List<DrawInstuction> instructions = this.UndoRedoController.getElements();
+
+                            if (extension == ImageFormat.Emf)
+                            {
+                                byte[] xmlBytes = Encoding.UTF8.GetBytes(this.ToXML(instructions));
+                                myStream.Write(xmlBytes, 0, xmlBytes.Length);
+                                
+                            }
+                            else
+                            {
+                                byte[] bitmapBytes = tekening.ToByteArray(extension);
+                                myStream.Write(bitmapBytes, 0, bitmapBytes.Length);
+                            }
+                            this.lastDrawHash = instructions.ToByteArray().GetHash();
+
                         }
                         myStream.Close();
 
