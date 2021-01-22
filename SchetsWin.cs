@@ -177,6 +177,12 @@ namespace SchetsEditor
             this.UndoRedoController.redo().DrawElements(this.schetscontrol.MaakBitmapGraphics());
             this.schetscontrol.Refresh();
         }
+        private void Clear(object obj, EventArgs ea)
+        {
+            this.schetscontrol.Schets.Schoon();
+            this.UndoRedoController.UndoList.Clear();
+            this.schetscontrol.Refresh();
+        }
 
 
         public SchetsWin(Bitmap openMetBitmap = null)
@@ -280,7 +286,7 @@ namespace SchetsEditor
         private void maakAktieMenu(String[] kleuren)
         {   
             ToolStripMenuItem menu = new ToolStripMenuItem("Aktie");
-            menu.DropDownItems.Add("Clear", null, schetscontrol.Schoon );
+            menu.DropDownItems.Add("Clear", null, this.Clear);
             menu.DropDownItems.Add("Roteer", null, schetscontrol.Roteer );
             ToolStripMenuItem submenu = new ToolStripMenuItem("Kies kleur");
             foreach (string k in kleuren)
@@ -349,36 +355,36 @@ namespace SchetsEditor
             if (e.Control && e.KeyCode == Keys.N)
             {
                 // Your code to execute when shortcut Ctrl+N happens here
-                Console.WriteLine("new window?");
+                //Console.WriteLine("new window?");
                 this.nieuweSchets(null, null);
             }
             else if (e.Control && e.Shift && e.KeyCode == Keys.S)
             {
                 // Your code to execute when shortcut Ctrl+S & Shift happens here
-                Console.WriteLine("save as?");
+                //Console.WriteLine("save as?");
                 this.opslaanAls(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.S)
             {
                 // Your code to execute when shortcut Ctrl+S happens here
-                Console.WriteLine("save?");
+                //Console.WriteLine("save?");
                 this.opslaan(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.Z)
             {
                 // Your code to execute when shortcut Ctrl+S happens here
-                Console.WriteLine("undo?");
+                //Console.WriteLine("undo?");
                 this.undo(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.Y)
             {
                 // Your code to execute when shortcut Ctrl+Y happens here
-                Console.WriteLine("redo?");
+                //Console.WriteLine("redo?");
                 this.redo(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.O)
             {
-                Console.WriteLine("Open file");
+                //Console.WriteLine("Open file");
                 this.openFile(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.W)
