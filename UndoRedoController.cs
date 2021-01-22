@@ -12,11 +12,11 @@ namespace SchetsEditor
         /// <summary>
         /// The list containing all of the current `DrawInstuction`s.
         /// </summary>
-        private List<DrawInstuction> UndoList = new List<DrawInstuction>();
+        public List<DrawInstuction> UndoList = new List<DrawInstuction>();
         /// <summary>
         /// The list containing all of the elements that can be redone, only being filled after calling `undo()` method.
         /// </summary>
-        private List<DrawInstuction> RedoList = new List<DrawInstuction>();
+        public List<DrawInstuction> RedoList = new List<DrawInstuction>();
 
         /// <summary>
         /// Adds the drawing instruction to the `UndoList` so it can be retrieved later.
@@ -26,7 +26,6 @@ namespace SchetsEditor
         {
             // Save the snapshot.
             UndoList.Add(instruction);
-            //Console.WriteLine("hallo?");
             
             // Empty the redo list.
             if (RedoList.Count > 0)
@@ -34,12 +33,19 @@ namespace SchetsEditor
                 RedoList = new List<DrawInstuction>();
             }
         }
+        public void removeInstruction(DrawInstuction instruction)
+        {
+            UndoList.Remove(instruction);
 
+        }
         public List<DrawInstuction> getElements()
         {
             return this.UndoList;
         }
+        public void Schoon()
+        {
 
+        }
         /// <summary>
         /// Undoes a 'commit' or drawing action made by the user. E.g. it removes the last drawing from the list.
         /// </summary>
