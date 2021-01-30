@@ -218,7 +218,9 @@ namespace SchetsEditor
                                        };
             schetscontrol.MouseMove += (object o, MouseEventArgs mea) =>
                                        {  if (vast)
-                                          huidigeTool.MuisDrag(schetscontrol, mea.Location);
+                                          {
+                                               huidigeTool.MuisDrag(schetscontrol, mea.Location);
+                                          }
                                        };
             schetscontrol.MouseUp   += (object o, MouseEventArgs mea) =>
                                        {

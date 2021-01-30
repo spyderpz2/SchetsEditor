@@ -57,6 +57,8 @@ namespace SchetsEditor
         public void Schoon()
         {
 
+        }
+
         public DrawStorage getcurrentState(Size afmetingen, Bitmap backgroundImage = null)
         {
             //Bitmap backImage = (backgroundImage != null) ? backgroundImage : null;
@@ -190,7 +192,7 @@ namespace SchetsEditor
         public int lijnDikte { get; }
         public Font font { get; }
         public char letter { get; }
-        public Stack<Point> puntenVanLijn { get; }
+        public List<Point> puntenVanLijn { get; }
 
         /// <summary>
         /// Facilitates debugging. 
@@ -250,6 +252,10 @@ namespace SchetsEditor
             return lastElement;
         }
 
+        public static T Peek<T>(this List<T> elements)
+        {
+            return elements[elements.Count - 1];
+        }
 
 
         /// <summary>
