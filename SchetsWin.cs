@@ -7,9 +7,6 @@ using System.Resources;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Security;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Xml.Serialization;
 using System.Text;
 
 namespace SchetsEditor
@@ -70,29 +67,18 @@ namespace SchetsEditor
                     {
                         var sr = new StreamReader(openDialog.FileName);
                         Stream str = sr.BaseStream;
-                        ImageFormat format = this.getImageFormatFromFile(new FileInfo(openDialog.FileName));
+                        ImageFormat format = Extension.getImageFormatFromFile(new FileInfo(openDialog.FileName));
                         if (format == ImageFormat.Emf)
                         {
                             string tekst = new StreamReader(str).ReadToEnd();
-                            Console.WriteLine("open");
-                            //Console.WriteLine(this.FromXML<List<DrawInstuction>>(tekst).ToString());
-                            DrawStorage final = this.FromXML<DrawStorage>(tekst);
-                            Console.WriteLine("size? " + final.backgroundImage.Size);
-                            using (Graphics g = Graphics.FromImage(final.backgroundImage))
-                            {
-                                Console.WriteLine("gaat nog goed hier");
-                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                            }
-
-                            final.backgroundImage = (Bitmap)final.backgroundImage.Clone();
-                            new SchetsWin(final, final.backgroundImage).Show();
-
+                            DrawStorage final = Extension.FromXML<DrawStorage>(tekst);
+                            new SchetsWin(final, openDialog.FileName).Show();
 
                         }
                         else
                         {
                             Bitmap openedImage = new Bitmap(str);
-                            new SchetsWin(new DrawStorage(new List<DrawInstuction>(), new List<DrawInstuction>(),openedImage.Size, openedImage)).Show();
+                            new SchetsWin(new DrawStorage(new List<DrawInstuction>(), new List<DrawInstuction>(),openedImage.Size, openedImage), openDialog.FileName).Show();
                         }
                     }
                     catch (SecurityException ex)    
@@ -109,20 +95,17 @@ namespace SchetsEditor
         private void opslaan(object obj, EventArgs ea)
         {
             Bitmap tekening = this.schetscontrol.Schets.tekening;
-            //Console.WriteLine("tf?");
-            //this.UndoRedoController.getcurrentState(this.schetscontrol.Schets.Afmeting, tekening);
             
             if (this.bestandsNaam != null)
             {
                 if (File.Exists(this.bestandsNaam))
                 {
-                    ImageFormat format = this.getImageFormatFromFile(new FileInfo(this.bestandsNaam));
-                    DrawStorage instructions = this.UndoRedoController.getcurrentState(this.schetscontrol.Schets.Afmeting, (Bitmap)this.schetscontrol.Schets.baseBitmap.Clone());
+                    ImageFormat format = Extension.getImageFormatFromFile(new FileInfo(this.bestandsNaam));
+                    Bitmap achtergrond = this.schetscontrol.Schets.baseBitmap;
+                    DrawStorage instructions = this.UndoRedoController.getcurrentState(this.schetscontrol.Schets.Afmeting, achtergrond != null ? (Bitmap)this.schetscontrol.Schets.baseBitmap.Clone() : null);
                     if (format == ImageFormat.Emf)
                     {
-                        //byte[] xmlBytes = instructions.ToByteArray();
-                        //File.WriteAllBytes(this.bestandsNaam, xmlBytes);
-                        File.WriteAllText(this.bestandsNaam, this.ToXML<DrawStorage>(instructions), Encoding.UTF8);
+                        File.WriteAllText(this.bestandsNaam, Extension.ToXML<DrawStorage>(instructions), Encoding.UTF8);
                     }
                     else
                     {
@@ -134,63 +117,7 @@ namespace SchetsEditor
                 }
             }
             
-
-            this.ser();
             SaveFile(tekening, "Sla tekening op");
-        }
-
-
-        //Not finished yet.
-        private void ser()
-        {
-            Console.WriteLine("ser called:");
-            //List<DrawInstuction> obj = this.UndoRedoController.getElements();//new DrawInstuction(ElementType.DrawRectangle, Color.Black, new Point(50, 50), new Point(100, 100), 4);
-            using (StringWriter stringWriter = new StringWriter(new StringBuilder()))
-            {
-                XmlSerializer xmlSerializer = new XmlSerializer(typeof(DrawStorage));
-                xmlSerializer.Serialize(stringWriter, this.UndoRedoController.getcurrentState(this.schetscontrol.Schets.Afmeting, this.schetscontrol.Schets.baseBitmap));
-                Console.WriteLine(stringWriter.ToString());
-            }
-            //Console.WriteLine(this.ToXML(this.UndoRedoController.getAll()));
-        }
-
-        public T FromXML<T>(string xml)
-        {
-            using (StringReader stringReader = new StringReader(xml))
-            {
-                XmlSerializer serializer = new XmlSerializer(typeof(T));
-                return (T)serializer.Deserialize(stringReader);
-            }
-        }
-
-        public string ToXML<T>(T obj)
-        {
-            using (StringWriter stringWriter = new StringWriter(new StringBuilder()))
-            {
-                XmlSerializer xmlSerializer = new XmlSerializer(typeof(T));
-                xmlSerializer.Serialize(stringWriter, obj);
-                return stringWriter.ToString();
-            }
-        }
-
-        private ImageFormat getImageFormatFromFile(FileInfo fileInfo)
-        {
-            switch (fileInfo.Extension.ToLower())
-            {
-                case ".png":
-                    return ImageFormat.Png;
-                case ".jpg":
-                    return ImageFormat.Jpeg;
-                case ".jpeg":
-                    return ImageFormat.Jpeg;
-                case ".bmp":
-                    return ImageFormat.Bmp;
-                case ".pml":
-                    //Use Emf as placeholder for our custom paint format. 
-                    return ImageFormat.Emf;
-                default:
-                    return ImageFormat.Png;
-            }
         }
 
         private void opslaanAls(object obj, EventArgs ea)
@@ -204,7 +131,6 @@ namespace SchetsEditor
             //Check if the hashes are the same or not, thus whether the current drawing was saved.
             if (this.UndoRedoController.getElements().ToByteArray().GetHash() != this.lastDrawHash)
             {       
-                Console.WriteLine("er waren wel wijzigingen");
                 string message = "Sommige wijzigingen zijn nog niet opgeslagen, wil je deze opslaan alvorens af te sluiten?";
                 string title = "Onopgeslagen werk";
                 MessageBoxButtons buttons = MessageBoxButtons.YesNoCancel;
@@ -239,9 +165,7 @@ namespace SchetsEditor
             this.schetscontrol.Refresh();
         }
 
-
-        //public SchetsWin(Bitmap openMetBitmap = null)
-        public SchetsWin(DrawStorage openWithSettings = null, Bitmap openWithBitmap = null)
+        public SchetsWin(DrawStorage openWithSettings = null, string fileName = null)
         {
             this.KeyPreview = true;
             this.KeyDown += new KeyEventHandler(SchetsWinKeyDown);
@@ -255,7 +179,7 @@ namespace SchetsEditor
                                     , new TekstTool()
                                     , new GumTool()
                                     };
-            String[] deKleuren = { "Black", "Red", "Green", "Blue"
+            string[] deKleuren = {"Black",  "White", "Red", "Green", "Blue"
                                  , "Yellow", "Magenta", "Cyan" 
                                  };
 
@@ -263,31 +187,13 @@ namespace SchetsEditor
 
             if (openWithSettings != null) //openWithSettings is thus not empty
             {
-                Console.WriteLine(openWithSettings.ToString());
-                UndoRedoController = new UndoRedoController(openWithSettings.undo, openWithSettings.redo);
-                if (openWithBitmap != null)
-                {
-                    /*using (Bitmap b = (Bitmap)(openWithBitmap.Clone()))
-                    {
-                        Console.WriteLine("bitmap type? " + b.GetType() + ";format: " + b.PixelFormat);
-                        using (var g = Graphics.FromImage((Bitmap)b.Clone()))
-                        {
-                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                        }
-                    }*/
-                }
+                this.UndoRedoController = new UndoRedoController(openWithSettings.undo, openWithSettings.redo);
+                this.schetscontrol = openWithSettings.backgroundImage != null ? new SchetsControl(openWithSettings.backgroundImage) : new SchetsControl();
 
-                openWithBitmap = openWithSettings.backgroundImage != null ? openWithSettings.backgroundImage : openWithBitmap;
-
-                schetscontrol = openWithBitmap != null ? new SchetsControl(openWithBitmap) : new SchetsControl();
-
-
-                Console.WriteLine("dimen: " + openWithSettings.dimensions);
+                this.bestandsNaam = fileName;
                 this.ClientSize = new Size(openWithSettings.dimensions.Width + 100, openWithSettings.dimensions.Height + 100);
-                schetscontrol.Size = openWithSettings.dimensions;
-                schetscontrol.Schets.Afmeting = openWithSettings.dimensions;
-
-                //this.schetscontrol.Schets.Schoon();
+                this.schetscontrol.Size = openWithSettings.dimensions;
+                this.schetscontrol.Schets.Afmeting = openWithSettings.dimensions;
                 openWithSettings.undo.DrawElements(this.schetscontrol.MaakBitmapGraphics());
                 this.schetscontrol.Invalidate();
             }
@@ -297,8 +203,6 @@ namespace SchetsEditor
                 UndoRedoController = new UndoRedoController();
                 schetscontrol = new SchetsControl();
             }
-
-            //schetscontrol = openMetBitmap != null ? new SchetsControl(openMetBitmap) : new SchetsControl();
             
             schetscontrol.MouseDown += (object o, MouseEventArgs mea) =>
                                        {
@@ -340,7 +244,7 @@ namespace SchetsEditor
         }
 
         private ToolStripMenuItem maakFileMenu()
-        {   
+        {
             ToolStripMenuItem TFile = new ToolStripMenuItem("&File");
             TFile.DropDownItems.AddRange( new ToolStripItem[] { 
                 maakItem("&New", new EventHandler(nieuweSchets), Keys.Control | Keys.Shift | Keys.N), 
@@ -350,7 +254,6 @@ namespace SchetsEditor
                 maakItem("E&xit", new EventHandler(afsluiten), Keys.Control | Keys.W)
             } );
             return TFile;
-
         }
 
         private static ToolStripMenuItem maakItem(String name, EventHandler toClick, Keys shortcut)
@@ -375,7 +278,7 @@ namespace SchetsEditor
             menuStrip.Items.Add(menu);
         }
 
-        private void maakAktieMenu(String[] kleuren)
+        private void maakAktieMenu(string[] kleuren)
         {   
             ToolStripMenuItem menu = new ToolStripMenuItem("Aktie");
             menu.DropDownItems.Add("Clear", null, schetscontrol.Schoon );
@@ -446,37 +349,26 @@ namespace SchetsEditor
         {
             if (e.Control && e.KeyCode == Keys.N)
             {
-                // Your code to execute when shortcut Ctrl+N happens here
-                Console.WriteLine("new window?");
                 this.nieuweSchets(null, null);
             }
             else if (e.Control && e.Shift && e.KeyCode == Keys.S)
             {
-                // Your code to execute when shortcut Ctrl+S & Shift happens here
-                Console.WriteLine("save as?");
                 this.opslaanAls(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.S)
             {
-                // Your code to execute when shortcut Ctrl+S happens here
-                Console.WriteLine("save?");
                 this.opslaan(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.Z)
             {
-                // Your code to execute when shortcut Ctrl+S happens here
-                Console.WriteLine("undo?");
                 this.undo(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.Y)
             {
-                // Your code to execute when shortcut Ctrl+Y happens here
-                Console.WriteLine("redo?");
                 this.redo(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.O)
             {
-                Console.WriteLine("Open file");
                 this.openFile(null, null);
             }
             else if (e.Control && e.KeyCode == Keys.W)
@@ -516,14 +408,14 @@ namespace SchetsEditor
                             FileInfo bestandsInfo = new FileInfo(opslaanDialog.FileName);
                             this.bestandsNaam = opslaanDialog.FileName;
                             this.Text = bestandsInfo.Name;
-                            ImageFormat extension = this.getImageFormatFromFile(bestandsInfo);
-                            DrawStorage instructions = this.UndoRedoController.getcurrentState(this.schetscontrol.Schets.Afmeting, (Bitmap)this.schetscontrol.Schets.baseBitmap.Clone());
+                            ImageFormat extension = Extension.getImageFormatFromFile(bestandsInfo);
+                            Bitmap achtergrond = this.schetscontrol.Schets.baseBitmap;
+                            DrawStorage instructions = this.UndoRedoController.getcurrentState(this.schetscontrol.Schets.Afmeting, achtergrond != null ? (Bitmap)this.schetscontrol.Schets.baseBitmap.Clone() : null);
 
                             if (extension == ImageFormat.Emf)
                             {
-                                byte[] xmlBytes = Encoding.UTF8.GetBytes(this.ToXML(instructions));
+                                byte[] xmlBytes = Encoding.UTF8.GetBytes(Extension.ToXML(instructions));
                                 myStream.Write(xmlBytes, 0, xmlBytes.Length);
-                                
                             }
                             else
                             {
@@ -534,25 +426,8 @@ namespace SchetsEditor
 
                         }
                         myStream.Close();
-
                     }
                 }
-            }
-
-        }
-
-
-
-    }
-
-    public static class ImageExtensions
-    {
-        public static byte[] ImageToByteArray(this Image image, ImageFormat format)
-        {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                image.Save(ms, format);
-                return ms.ToArray();
             }
         }
     }

@@ -20,19 +20,26 @@ namespace SchetsEditor
                 {
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
-                    if (fileName.ToLower().Contains(".jpg") || fileName.ToLower().Contains(".jpeg") || fileName.ToLower().Contains(".png") || fileName.ToLower().Contains(".bmp") || fileName.ToLower().Contains(".gif"))
+                    if (fileName.ToLower().Contains(".pml") || fileName.ToLower().Contains(".jpg") || fileName.ToLower().Contains(".jpeg") || fileName.ToLower().Contains(".png") || fileName.ToLower().Contains(".bmp") || fileName.ToLower().Contains(".gif"))
                     {
                         try
                         {
                             var sr = new StreamReader(fileName);
                             Stream str = sr.BaseStream;
-                            Bitmap openedImage = new Bitmap(str);
-                            //new SchetsWin(openedImage).Show();
-                            Application.Run(new SchetsWin(new DrawStorage(new List<DrawInstuction>(), new List<DrawInstuction>(), openedImage.Size, openedImage)));
-
+                            if (fileName.ToLower().Contains(".pml"))
+                            {
+                                string tekst = new StreamReader(str).ReadToEnd();
+                                DrawStorage final = Extension.FromXML<DrawStorage>(tekst);
+                                Application.Run(new SchetsWin(final, fileName));
+                            }
+                            else
+                            {
+                                Bitmap openedImage = new Bitmap(str);
+                                Application.Run(new SchetsWin(new DrawStorage(new List<DrawInstuction>(), new List<DrawInstuction>(), openedImage.Size, openedImage), fileName));
+                            }
                         }
                         catch (SecurityException ex)
-                        {
+                        { 
                             MessageBox.Show($"Security error.\n\nError message: {ex.Message}\n\n" +
                             $"Details:\n\n{ex.StackTrace}");
                             Application.Run(new SchetsWin());
@@ -52,7 +59,6 @@ namespace SchetsEditor
                     Application.SetCompatibleTextRenderingDefault(false);
                     Application.Run(new SchetsWin());
                 }
-                //Application.Run(new SchetsWin());
             }
             else
             {

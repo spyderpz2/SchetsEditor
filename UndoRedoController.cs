@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace SchetsEditor
@@ -29,7 +30,6 @@ namespace SchetsEditor
         {
             // Save the snapshot.
             UndoList.Add(instruction);
-            //Console.WriteLine("hallo?");
             
             // Empty the redo list.
             if (RedoList.Count > 0)
@@ -46,7 +46,6 @@ namespace SchetsEditor
 
         public UndoRedoController() { }
 
-
         public List<DrawInstuction> getElements()
         { 
             return this.UndoList;
@@ -54,8 +53,8 @@ namespace SchetsEditor
 
         public DrawStorage getcurrentState(Size afmetingen, Bitmap backgroundImage = null)
         {
-            Bitmap backImage = (backgroundImage != null) ? backgroundImage : null;
-            return new DrawStorage(this.UndoList, this.RedoList, afmetingen, backImage);
+            //Bitmap backImage = (backgroundImage != null) ? backgroundImage : null;
+            return new DrawStorage(this.UndoList, this.RedoList, afmetingen, (backgroundImage != null) ? backgroundImage : null);
         }
         /// <summary>
         /// Undoes a 'commit' or drawing action made by the user. E.g. it removes the last drawing from the list.
@@ -98,20 +97,17 @@ namespace SchetsEditor
             backgroundImage = backImage;
         }
 
-        public DrawStorage() 
-        { 
-        
-        }
+        public DrawStorage() { }
 
         public List<DrawInstuction> undo { get; set; } 
         public List<DrawInstuction> redo { get; set; } 
         public Size dimensions { get; set; }
+        [XmlIgnore]
         public Bitmap backgroundImage { get; set; }
 
-/*
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         [XmlElement("backgroundImage")]
-        public byte[] backgroundImageSerialized
+        public string backgroundImageSerialized
         {
             get
             { // serialize
@@ -119,27 +115,20 @@ namespace SchetsEditor
                 using (MemoryStream ms = new MemoryStream())
                 {
                     backgroundImage.Save(ms, ImageFormat.Bmp);
-                    return ms.ToArray();
+                    return Convert.ToBase64String(ms.ToArray());
                 }
             }
             set
             { // deserialize
-                if (value == null)
-                {
-                    backgroundImage = null;
-                }
+                if (value == null) {backgroundImage = null;}
                 else
                 {
-                    using (MemoryStream ms = new MemoryStream(value))
-                    {
-                        backgroundImage = new Bitmap(ms);
-                    }
+                    byte[] bytes = Convert.FromBase64String(value);
+                    MemoryStream mem = new MemoryStream(bytes);
+                    backgroundImage = new Bitmap(mem);
                 }
             }
         }
-*/
-
-
 
         public override string ToString() => $"Undo: {undo.ToString()}, Redo: {redo.ToString()}, meta: {(backgroundImage != null ? backgroundImage.ToString() : "".ToString() )};";
 
@@ -188,7 +177,6 @@ namespace SchetsEditor
 
 
         public ElementType elementType { get; set; }
-        //public Color kleur { get; set; }
         public Point startPunt { get; set; }
         public Point eindPunt { get; set; }
         public int lijnDikte { get; set; }
@@ -340,6 +328,46 @@ namespace SchetsEditor
             }
         }
 
+        public static T FromXML<T>(string xml)
+        {
+            using (StringReader stringReader = new StringReader(xml))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(T));
+                return (T)serializer.Deserialize(stringReader);
+            }
+        }
+
+        public static string ToXML<T>(T obj)
+        {
+            using (StringWriter stringWriter = new StringWriter(new StringBuilder()))
+            {
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(T));
+                xmlSerializer.Serialize(stringWriter, obj);
+                return stringWriter.ToString();
+            }
+        }
+
+        public static ImageFormat getImageFormatFromFile(FileInfo fileInfo)
+        {
+            switch (fileInfo.Extension.ToLower())
+            {
+                case ".png":
+                    return ImageFormat.Png;
+                case ".jpg":
+                    return ImageFormat.Jpeg;
+                case ".jpeg":
+                    return ImageFormat.Jpeg;
+                case ".bmp":
+                    return ImageFormat.Bmp;
+                case ".pml":
+                    //Use Emf as placeholder for our custom paint format. 
+                    return ImageFormat.Emf;
+                default:
+                    return ImageFormat.Png;
+            }
+        }
+
+
         //https://stackoverflow.com/a/10502856/8902440
         public static byte[] ToByteArray(this object obj)
         {
@@ -361,4 +389,15 @@ namespace SchetsEditor
         }
     }
 
+    public static class ImageExtensions
+    {
+        public static byte[] ImageToByteArray(this Image image, ImageFormat format)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                image.Save(ms, format);
+                return ms.ToArray();
+            }
+        }
+    }
 }
