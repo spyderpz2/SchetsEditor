@@ -5,24 +5,26 @@ using System.Windows.Forms;
 
 namespace SchetsEditor
 {   public class SchetsControl : UserControl
-    {   private Schets schets;
+    {   
+        private Schets schets;
         private Color penkleur;
 
         public Color PenKleur
-        { get { return penkleur; }
+        { 
+            get { return penkleur; }
         }
         public Schets Schets
-        { get { return schets;   }
+        { 
+            get { return schets;   }
         }
 
         public SchetsControl(Bitmap openMetBitmap = null)
         {   this.BorderStyle = BorderStyle.Fixed3D;
 
-            this.schets = openMetBitmap != null ? new Schets(openMetBitmap) : new Schets();
             if (openMetBitmap != null)
             {
                 this.schets = new Schets(openMetBitmap);
-                //schets.VeranderAfmeting(openMetBitmap.Size);
+                this.Size = this.schets.Afmeting;
             }
             else
             {
@@ -34,15 +36,13 @@ namespace SchetsEditor
             this.Resize += this.veranderAfmeting;
             this.veranderAfmeting(null, null);
         }
-        protected override void OnPaintBackground(PaintEventArgs e)
-        {
-        }
         private void teken(object o, PaintEventArgs pea)
         {
             schets.Teken(pea.Graphics);
         }
         private void veranderAfmeting(object o, EventArgs ea)
-        {   schets.VeranderAfmeting(this.ClientSize);
+        {
+            schets.VeranderAfmeting(this.ClientSize);
             this.Invalidate();
         }
         public Graphics MaakBitmapGraphics()
