@@ -18,10 +18,12 @@ namespace SchetsEditor
         public SchetsControl(Bitmap openMetBitmap = null)
         {   this.BorderStyle = BorderStyle.Fixed3D;
 
-            this.schets = openMetBitmap != null ? new Schets(openMetBitmap) : new Schets();
+           // this.schets = openMetBitmap != null ? new Schets(openMetBitmap) : new Schets();
             if (openMetBitmap != null)
             {
+
                 this.schets = new Schets(openMetBitmap);
+                this.Size = this.schets.Afmeting;
                 //schets.VeranderAfmeting(openMetBitmap.Size);
             }
             else
@@ -42,7 +44,10 @@ namespace SchetsEditor
             schets.Teken(pea.Graphics);
         }
         private void veranderAfmeting(object o, EventArgs ea)
-        {   schets.VeranderAfmeting(this.ClientSize);
+
+        {
+            Console.WriteLine("ja dit wordt gerunt");
+            schets.VeranderAfmeting(this.ClientSize);
             this.Invalidate();
         }
         public Graphics MaakBitmapGraphics()

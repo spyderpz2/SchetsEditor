@@ -23,7 +23,7 @@ namespace SchetsEditor
         /// <summary>
         /// The Stack containing all of the coordinates of the drawing by Pentool.
         /// </summary>
-        protected Stack<Point> penLijn = new Stack<Point>();
+        protected List<Point> penLijn = new List<Point>();
 
         public virtual void MuisVast(SchetsControl s, Point p)
         {   startpunt = p;
@@ -101,7 +101,7 @@ namespace SchetsEditor
         public override void Bezig(Graphics g, Point p1, Point p2, UndoRedoController u = null)
         {   g.DrawRectangle(MaakPen(kwast,3), TweepuntTool.Punten2Rechthoek(p1, p2));
             if (u != null)
-                u.addInstruction(new DrawInstuction(ElementType.RechthoekOpen, ((SolidBrush)kwast).Color, p1, p2, 3));
+                u.addInstruction(new DrawInstuction(ElementType.DrawRectangle, ((SolidBrush)kwast).Color, p1, p2, 3));
         }
     }
     
@@ -111,7 +111,7 @@ namespace SchetsEditor
 
         public override void Compleet(UndoRedoController u, Graphics g, Point p1, Point p2)
         {   g.FillRectangle(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
-            u.addInstruction(new DrawInstuction(ElementType.RechthoekDicht, ((SolidBrush)kwast).Color, p1, p2));
+            u.addInstruction(new DrawInstuction(ElementType.FillRectangle, ((SolidBrush)kwast).Color, p1, p2));
         }
     }
 
@@ -123,7 +123,7 @@ namespace SchetsEditor
         {
             g.DrawEllipse(MaakPen(kwast, 3), TweepuntTool.Punten2Rechthoek(p1, p2));
             if(u != null)
-                u.addInstruction(new DrawInstuction(ElementType.ElipseOpen, ((SolidBrush)kwast).Color, p1, p2, 3));
+                u.addInstruction(new DrawInstuction(ElementType.DrawEllipse, ((SolidBrush)kwast).Color, p1, p2, 3));
         }
     }
     public class VolEllipseTool : EllipseTool
@@ -133,7 +133,7 @@ namespace SchetsEditor
         public override void Compleet(UndoRedoController u, Graphics g, Point p1, Point p2)
         {
             g.FillEllipse(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
-            u.addInstruction(new DrawInstuction(ElementType.ElipseDicht, ((SolidBrush)kwast).Color, p1, p2));
+            u.addInstruction(new DrawInstuction(ElementType.FillEllipse, ((SolidBrush)kwast).Color, p1, p2));
         }
     }
     public class LijnTool : TweepuntTool
@@ -143,8 +143,10 @@ namespace SchetsEditor
         {
             //Check whether the line is drawn with the Pentool, then push the points to the stack penLijn.
             if (this.isPen)
-                this.penLijn.Push(p1); this.penLijn.Push(p2);
-            
+            {
+                this.penLijn.Add(p1); 
+                this.penLijn.Add(p2);
+            }
             g.DrawLine(MaakPen(this.kwast,3), p1, p2);
             
             //Check whether the UndoRedoController is passed to the function, then add the definitive instruction to it.
@@ -154,11 +156,11 @@ namespace SchetsEditor
                 {
                     ///Could maybe split the penLijn to multiple smaller points.
                     u.addInstruction(new DrawInstuction(ElementType.Pen, ((SolidBrush)this.kwast).Color, this.penLijn, 3));
-                    this.penLijn = new Stack<Point>();
+                    this.penLijn = new List<Point>();
                 }
                 else //This means its just a normal straight line.
                 {
-                    u.addInstruction(new DrawInstuction(ElementType.Lijn, ((SolidBrush)this.kwast).Color, p1, p2, 3));
+                    u.addInstruction(new DrawInstuction(ElementType.Line, ((SolidBrush)this.kwast).Color, p1, p2, 3));
                 }
             }
         }

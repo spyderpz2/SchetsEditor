@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -37,19 +38,25 @@ namespace SchetsEditor
             }
         }
 
+        public UndoRedoController(List<DrawInstuction> undo, List<DrawInstuction> redo) 
+        {
+            UndoList = undo;
+            RedoList = redo;
+        }
+
+        public UndoRedoController() { }
+
+
         public List<DrawInstuction> getElements()
         { 
             return this.UndoList;
         }
 
-        public Dictionary<String, List<DrawInstuction>> getAll()
+        public DrawStorage getcurrentState(Size afmetingen, Bitmap backgroundImage = null)
         {
-            Dictionary<String, List<DrawInstuction>> undoRedo = new Dictionary<string, List<DrawInstuction>>();
-            undoRedo.Add("undo", this.UndoList);
-            undoRedo.Add("redo", this.RedoList);
-            return undoRedo;
+            Bitmap backImage = (backgroundImage != null) ? backgroundImage : null;
+            return new DrawStorage(this.UndoList, this.RedoList, afmetingen, backImage);
         }
-
         /// <summary>
         /// Undoes a 'commit' or drawing action made by the user. E.g. it removes the last drawing from the list.
         /// </summary>
@@ -79,6 +86,65 @@ namespace SchetsEditor
         }
 
     }
+
+    [Serializable]
+    public class DrawStorage
+    {
+        public DrawStorage(List<DrawInstuction> undoList , List<DrawInstuction> redoList, Size afmeting, Bitmap backImage)
+        {
+            undo = undoList;
+            redo = redoList;
+            dimensions = afmeting;
+            backgroundImage = backImage;
+        }
+
+        public DrawStorage() 
+        { 
+        
+        }
+
+        public List<DrawInstuction> undo { get; set; } 
+        public List<DrawInstuction> redo { get; set; } 
+        public Size dimensions { get; set; }
+        public Bitmap backgroundImage { get; set; }
+
+/*
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [XmlElement("backgroundImage")]
+        public byte[] backgroundImageSerialized
+        {
+            get
+            { // serialize
+                if (backgroundImage == null) { return null; }
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    backgroundImage.Save(ms, ImageFormat.Bmp);
+                    return ms.ToArray();
+                }
+            }
+            set
+            { // deserialize
+                if (value == null)
+                {
+                    backgroundImage = null;
+                }
+                else
+                {
+                    using (MemoryStream ms = new MemoryStream(value))
+                    {
+                        backgroundImage = new Bitmap(ms);
+                    }
+                }
+            }
+        }
+*/
+
+
+
+        public override string ToString() => $"Undo: {undo.ToString()}, Redo: {redo.ToString()}, meta: {(backgroundImage != null ? backgroundImage.ToString() : "".ToString() )};";
+
+    }
+
 
     /// <summary>
     /// Holds all the information to recreate a drawing action by the user.

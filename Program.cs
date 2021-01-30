@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Drawing;
 using System.Security;
+using System.Collections.Generic;
 
 namespace SchetsEditor
 {
@@ -27,7 +28,7 @@ namespace SchetsEditor
                             Stream str = sr.BaseStream;
                             Bitmap openedImage = new Bitmap(str);
                             //new SchetsWin(openedImage).Show();
-                            Application.Run(new SchetsWin(openedImage));
+                            Application.Run(new SchetsWin(new DrawStorage(new List<DrawInstuction>(), new List<DrawInstuction>(), openedImage.Size, openedImage)));
 
                         }
                         catch (SecurityException ex)
