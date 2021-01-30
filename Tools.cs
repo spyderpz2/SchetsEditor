@@ -244,6 +244,10 @@ namespace SchetsEditor
                             }
                             visible = gp.IsOutlineVisible(p.X, p.Y, uu.CreatePen());
                             break;
+                        default:
+                            u.UndoList.Remove(uu);
+                            u.RedoList.Add(uu);
+                            break;
                     }
                     // Here we have to only check visible because everything is checked by the switch.
                     if (visible)
