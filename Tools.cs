@@ -23,7 +23,7 @@ namespace SchetsEditor
         /// <summary>
         /// The Stack containing all of the coordinates of the drawing by Pentool.
         /// </summary>
-        protected Stack<Point> penLijn = new Stack<Point>();
+        protected List<Point> penLijn = new List<Point>();
 
         public virtual void MuisVast(SchetsControl s, Point p)
         {
@@ -114,7 +114,6 @@ namespace SchetsEditor
             {
                 u.addInstruction(new DrawInstuction(ElementType.DrawRectangle, ((SolidBrush)kwast).Color, p1, p2, 3));
             }
-
         }
     }
 
@@ -125,7 +124,6 @@ namespace SchetsEditor
         public override void Compleet(UndoRedoController u, Graphics g, Point p1, Point p2)
         {
             g.FillRectangle(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
-            
             u.addInstruction(new DrawInstuction(ElementType.FillRectangle, ((SolidBrush)kwast).Color, p1, p2, 3));
         }
     }
@@ -153,7 +151,6 @@ namespace SchetsEditor
 
             g.FillEllipse(kwast, TweepuntTool.Punten2Rechthoek(p1, p2));
             u.addInstruction(new DrawInstuction(ElementType.FillEllipse, ((SolidBrush)kwast).Color, p1, p2, 3));
-
         }
     }
     public class LijnTool : TweepuntTool
@@ -175,7 +172,7 @@ namespace SchetsEditor
                 {
                     ///Could maybe split the penLijn to multiple smaller points.
                     u.addInstruction(new DrawInstuction(ElementType.Pen, ((SolidBrush)this.kwast).Color, this.penLijn, 3));
-                    this.penLijn = new Stack<Point>();
+                    this.penLijn = new List<Point>();
                 }
                 else //This means its just a normal straight line.
                 {

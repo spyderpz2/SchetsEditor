@@ -1,9 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using System.Xml.Serialization;
 
 namespace SchetsEditor
 {
@@ -36,14 +40,27 @@ namespace SchetsEditor
         public void removeInstruction(DrawInstuction instruction)
         {
             UndoList.Remove(instruction);
-
         }
-        public List<DrawInstuction> getElements()
+          
+        public UndoRedoController(List<DrawInstuction> undo, List<DrawInstuction> redo) 
         {
+            UndoList = undo;
+            RedoList = redo;
+        }
+
+        public UndoRedoController() { }
+
+        public List<DrawInstuction> getElements()
+        { 
             return this.UndoList;
         }
         public void Schoon()
         {
+
+        public DrawStorage getcurrentState(Size afmetingen, Bitmap backgroundImage = null)
+        {
+            //Bitmap backImage = (backgroundImage != null) ? backgroundImage : null;
+            return new DrawStorage(this.UndoList, this.RedoList, afmetingen, (backgroundImage != null) ? backgroundImage : null);
 
         }
         /// <summary>
@@ -75,6 +92,55 @@ namespace SchetsEditor
         }
 
     }
+
+    [Serializable]
+    public class DrawStorage
+    {
+        public DrawStorage(List<DrawInstuction> undoList , List<DrawInstuction> redoList, Size afmeting, Bitmap backImage)
+        {
+            undo = undoList;
+            redo = redoList;
+            dimensions = afmeting;
+            backgroundImage = backImage;
+        }
+
+        public DrawStorage() { }
+
+        public List<DrawInstuction> undo { get; set; } 
+        public List<DrawInstuction> redo { get; set; } 
+        public Size dimensions { get; set; }
+        [XmlIgnore]
+        public Bitmap backgroundImage { get; set; }
+
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [XmlElement("backgroundImage")]
+        public string backgroundImageSerialized
+        {
+            get
+            { // serialize
+                if (backgroundImage == null) { return null; }
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    backgroundImage.Save(ms, ImageFormat.Bmp);
+                    return Convert.ToBase64String(ms.ToArray());
+                }
+            }
+            set
+            { // deserialize
+                if (value == null) {backgroundImage = null;}
+                else
+                {
+                    byte[] bytes = Convert.FromBase64String(value);
+                    MemoryStream mem = new MemoryStream(bytes);
+                    backgroundImage = new Bitmap(mem);
+                }
+            }
+        }
+
+        public override string ToString() => $"Undo: {undo.ToString()}, Redo: {redo.ToString()}, meta: {(backgroundImage != null ? backgroundImage.ToString() : "".ToString() )};";
+
+    }
+
 
     /// <summary>
     /// Holds all the information to recreate a drawing action by the user.
@@ -108,7 +174,7 @@ namespace SchetsEditor
             letter = elChar;
         }
 
-        public DrawInstuction(ElementType elType, Color elKleur, Stack<Point> elPunten, int elLijnDikte = 3) : this()
+        public DrawInstuction(ElementType elType, Color elKleur, List<Point> elPunten, int elLijnDikte = 3) : this()
         {
             elementType = elType;
             kleur = elKleur;
@@ -117,14 +183,34 @@ namespace SchetsEditor
         }
 
 
-        public ElementType elementType { get; }
-        public Color kleur { get; }
-        public Point startPunt { get; }
+        public ElementType elementType { get; set; }
+        public Point startPunt { get; set; }
         public Point eindPunt { get; set; }
-        public int lijnDikte { get; }
-        public Font font { get; }
-        public char letter { get; }
-        public Stack<Point> puntenVanLijn { get; }
+        public int lijnDikte { get; set; }
+        public char letter { get; set; }
+        public List<Point> puntenVanLijn { get; set; }
+
+        //color should be ignored by xml serializer because it can't normally be serialized.
+        [XmlIgnore]
+        public Color kleur { get; set; }
+        //Fix the color serialization. Taken from: https://stackoverflow.com/a/12101050/8902440
+        [XmlElement("kleur"), Browsable(false)]
+        public int kleurAsArgb
+        {
+            get { return kleur.ToArgb(); }
+            set { kleur = Color.FromArgb(value); }
+        }
+
+        //font should be ingored by xml serializer because it can't normally be serialized.
+        [XmlIgnore()]
+        public Font font { get; set; }
+        //Fix the font serialization. Taken from: https://stackoverflow.com/a/34934422/8902440
+        [Browsable(false)]
+        public string FontSerialize
+        {
+            get { return TypeDescriptor.GetConverter(typeof(Font)).ConvertToInvariantString(font); }
+            set { font = TypeDescriptor.GetConverter(typeof(Font)).ConvertFromInvariantString(value) as Font; }
+        }
 
         /// <summary>
         /// Facilitates debugging. 
@@ -169,32 +255,35 @@ namespace SchetsEditor
         /// </summary>
         /// <param name="elStack">The stack of `DrawInstuction` to be returned as a contious string.</param>
         /// <returns>String the elements in elStack to string with "\n" in between</returns>
-        public static string ToString(this List<DrawInstuction> elStack)
+        public static string ToString<T>(this List<T> elStack)
         {
             string toReturn = "";
-            foreach (DrawInstuction el in elStack)
+            foreach (T el in elStack)
                 toReturn += el.ToString() + "\n";
             return toReturn;
         }
 
-        public static DrawInstuction Pop(this List<DrawInstuction> elements)
+        public static T Pop<T>(this List<T> elements)
         {
-            DrawInstuction lastElement = elements[elements.Count - 1];
+            T lastElement = elements[elements.Count - 1];
             elements.RemoveAt(elements.Count - 1);
             return lastElement;
         }
 
-
+        public static T Peek<T>(this List<T> elements)
+        {
+            return elements[elements.Count - 1];
+        }
 
         /// <summary>
         /// Reverses the stack of `DrawInstuction`. First becomes last element and vice versa.
         /// </summary>
         /// <param name="elStack">The stack of `DrawInstuction` to be returned in Reverse order.</param>
         /// <returns>`Stack<DrawInstuction>`: elStack in Reverse order.</returns>
-        public static List<DrawInstuction> CustomReverse(this List<DrawInstuction> elStack)
+        public static List<T> CustomReverse<T>(this List<T> elStack)
         {
-            List<DrawInstuction> drawOrder = new List<DrawInstuction>();
-            foreach (DrawInstuction el in elStack)
+            List<T> drawOrder = new List<T>();
+            foreach (T el in elStack)
                 drawOrder.Add(el);
             return drawOrder;
         }
@@ -245,6 +334,46 @@ namespace SchetsEditor
             }
         }
 
+        public static T FromXML<T>(string xml)
+        {
+            using (StringReader stringReader = new StringReader(xml))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(T));
+                return (T)serializer.Deserialize(stringReader);
+            }
+        }
+
+        public static string ToXML<T>(T obj)
+        {
+            using (StringWriter stringWriter = new StringWriter(new StringBuilder()))
+            {
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(T));
+                xmlSerializer.Serialize(stringWriter, obj);
+                return stringWriter.ToString();
+            }
+        }
+
+        public static ImageFormat getImageFormatFromFile(FileInfo fileInfo)
+        {
+            switch (fileInfo.Extension.ToLower())
+            {
+                case ".png":
+                    return ImageFormat.Png;
+                case ".jpg":
+                    return ImageFormat.Jpeg;
+                case ".jpeg":
+                    return ImageFormat.Jpeg;
+                case ".bmp":
+                    return ImageFormat.Bmp;
+                case ".pml":
+                    //Use Emf as placeholder for our custom paint format. 
+                    return ImageFormat.Emf;
+                default:
+                    return ImageFormat.Png;
+            }
+        }
+
+
         //https://stackoverflow.com/a/10502856/8902440
         public static byte[] ToByteArray(this object obj)
         {
@@ -266,4 +395,15 @@ namespace SchetsEditor
         }
     }
 
+    public static class ImageExtensions
+    {
+        public static byte[] ImageToByteArray(this Image image, ImageFormat format)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                image.Save(ms, format);
+                return ms.ToArray();
+            }
+        }
+    }
 }
