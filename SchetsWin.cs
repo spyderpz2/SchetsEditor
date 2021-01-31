@@ -285,10 +285,13 @@ namespace SchetsEditor
         }
 
         private void maakAktieMenu(string[] kleuren)
-        {   
+        {
             ToolStripMenuItem menu = new ToolStripMenuItem("Aktie");
-            menu.DropDownItems.Add("Clear", null, schetscontrol.Schoon );
-            menu.DropDownItems.Add("Roteer", null, schetscontrol.Roteer );
+            menu.DropDownItems.Add(maakItem("&Undo", new EventHandler(this.undo), Keys.Control | Keys.Z));
+            menu.DropDownItems.Add(maakItem("&Redo", new EventHandler(this.redo), Keys.Control | Keys.Y));
+            menu.DropDownItems.Add(maakItem("&Clear", new EventHandler(this.schetscontrol.Schoon), Keys.Control | Keys.C));
+            menu.DropDownItems.Add(maakItem("&Roteer", new EventHandler(this.schetscontrol.Roteer), Keys.Control | Keys.R));
+
             ToolStripMenuItem submenu = new ToolStripMenuItem("Kies kleur");
             foreach (string k in kleuren)
                 submenu.DropDownItems.Add(k, null, schetscontrol.VeranderKleurViaMenu);
@@ -381,6 +384,15 @@ namespace SchetsEditor
             {
                 this.afsluiten(null, null);
             }
+            else if (e.Control && e.KeyCode == Keys.C)
+            {
+                this.schetscontrol.Schoon(null,null);
+            }
+            else if (e.Control && e.KeyCode == Keys.R)
+            {
+                this.schetscontrol.Roteer(null, null);
+            }
+
         }
 
 

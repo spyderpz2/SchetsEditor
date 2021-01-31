@@ -175,14 +175,12 @@ namespace SchetsEditor
         }
 
 
-        public ElementType elementType { get; }
-        public Color kleur { get; }
-        public Point startPunt { get; }
+        public ElementType elementType { get; set; }
+        public Point startPunt { get; set; }
         public Point eindPunt { get; set; }
-        public int lijnDikte { get; }
-        public Font font { get; }
-        public char letter { get; }
-        public List<Point> puntenVanLijn { get; }
+        public int lijnDikte { get; set; }
+        public char letter { get; set; }
+        public List<Point> puntenVanLijn { get; set; }
 
         //color should be ignored by xml serializer because it can't normally be serialized.
         [XmlIgnore]
@@ -199,7 +197,7 @@ namespace SchetsEditor
         [XmlIgnore()]
         public Font font { get; set; }
         //Fix the font serialization. Taken from: https://stackoverflow.com/a/34934422/8902440
-        [Browsable(false)]
+        [XmlElement("font"), Browsable(false)]
         public string FontSerialize
         {
             get { return TypeDescriptor.GetConverter(typeof(Font)).ConvertToInvariantString(font); }
@@ -266,7 +264,7 @@ namespace SchetsEditor
 
         public static T Peek<T>(this List<T> elements)
         {
-            return elements[elements.Count - 1];
+            return elements.Last();
         }
 
 
