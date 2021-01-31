@@ -16,11 +16,11 @@ namespace SchetsEditor
         /// <summary>
         /// The list containing all of the current `DrawInstuction`s.
         /// </summary>
-        private List<DrawInstuction> UndoList = new List<DrawInstuction>();
+        public List<DrawInstuction> UndoList = new List<DrawInstuction>();
         /// <summary>
         /// The list containing all of the elements that can be redone, only being filled after calling `undo()` method.
         /// </summary>
-        private List<DrawInstuction> RedoList = new List<DrawInstuction>();
+        public List<DrawInstuction> RedoList = new List<DrawInstuction>();
 
         /// <summary>
         /// Adds the drawing instruction to the `UndoList` so it can be retrieved later.
