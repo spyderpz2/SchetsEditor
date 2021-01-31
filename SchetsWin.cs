@@ -9,7 +9,6 @@ using System.IO;
 using System.Security;
 using System.Text;
 
-
 namespace SchetsEditor
 {
     public class SchetsWin : Form
@@ -35,7 +34,11 @@ namespace SchetsEditor
                                           , this.ClientSize.Height - 80);
             paneel.Location = new Point(64, this.ClientSize.Height - 30);
         }
-
+        /*protected override void OnFormClosing(FormClosingEventArgs fea)
+        {
+            fea.Cancel = true;
+            base.OnFormClosing(fea);
+        }*/
         private void klikToolMenu(object obj, EventArgs ea)
         {
             this.huidigeTool = (ISchetsTool)((ToolStripMenuItem)obj).Tag;
@@ -165,12 +168,6 @@ namespace SchetsEditor
             this.UndoRedoController.redo().DrawElements(this.schetscontrol.MaakBitmapGraphics());
             this.schetscontrol.Refresh();
         }
-        private void Clear(object obj, EventArgs ea)
-        {
-            this.schetscontrol.Schets.Schoon();
-            this.UndoRedoController.UndoList.Clear();
-            this.schetscontrol.Refresh();
-        }
 
         public SchetsWin(DrawStorage openWithSettings = null, string fileName = null)
         {
@@ -290,7 +287,7 @@ namespace SchetsEditor
         private void maakAktieMenu(string[] kleuren)
         {   
             ToolStripMenuItem menu = new ToolStripMenuItem("Aktie");
-            menu.DropDownItems.Add("Clear", null, this.Clear);
+            menu.DropDownItems.Add("Clear", null, schetscontrol.Schoon );
             menu.DropDownItems.Add("Roteer", null, schetscontrol.Roteer );
             ToolStripMenuItem submenu = new ToolStripMenuItem("Kies kleur");
             foreach (string k in kleuren)

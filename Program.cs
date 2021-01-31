@@ -39,7 +39,7 @@ namespace SchetsEditor
                             }
                         }
                         catch (SecurityException ex)
-                        { 
+                        {
                             MessageBox.Show($"Security error.\n\nError message: {ex.Message}\n\n" +
                             $"Details:\n\n{ex.StackTrace}");
                             Application.Run(new SchetsWin());

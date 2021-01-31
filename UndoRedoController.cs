@@ -37,11 +37,7 @@ namespace SchetsEditor
                 RedoList = new List<DrawInstuction>();
             }
         }
-        public void removeInstruction(DrawInstuction instruction)
-        {
-            UndoList.Remove(instruction);
-        }
-          
+
         public UndoRedoController(List<DrawInstuction> undo, List<DrawInstuction> redo) 
         {
             UndoList = undo;
@@ -54,16 +50,10 @@ namespace SchetsEditor
         { 
             return this.UndoList;
         }
-        public void Schoon()
-        {
-
-        }
-
         public DrawStorage getcurrentState(Size afmetingen, Bitmap backgroundImage = null)
         {
             //Bitmap backImage = (backgroundImage != null) ? backgroundImage : null;
             return new DrawStorage(this.UndoList, this.RedoList, afmetingen, (backgroundImage != null) ? backgroundImage : null);
-
         }
         /// <summary>
         /// Undoes a 'commit' or drawing action made by the user. E.g. it removes the last drawing from the list.
@@ -193,6 +183,28 @@ namespace SchetsEditor
         public Font font { get; }
         public char letter { get; }
         public List<Point> puntenVanLijn { get; }
+
+        //color should be ignored by xml serializer because it can't normally be serialized.
+        [XmlIgnore]
+        public Color kleur { get; set; }
+        //Fix the color serialization. Taken from: https://stackoverflow.com/a/12101050/8902440
+        [XmlElement("kleur"), Browsable(false)]
+        public int kleurAsArgb
+        {
+            get { return kleur.ToArgb(); }
+            set { kleur = Color.FromArgb(value); }
+        }
+
+        //font should be ingored by xml serializer because it can't normally be serialized.
+        [XmlIgnore()]
+        public Font font { get; set; }
+        //Fix the font serialization. Taken from: https://stackoverflow.com/a/34934422/8902440
+        [Browsable(false)]
+        public string FontSerialize
+        {
+            get { return TypeDescriptor.GetConverter(typeof(Font)).ConvertToInvariantString(font); }
+            set { font = TypeDescriptor.GetConverter(typeof(Font)).ConvertFromInvariantString(value) as Font; }
+        }
 
         /// <summary>
         /// Facilitates debugging. 
