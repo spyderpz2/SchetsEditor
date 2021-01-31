@@ -50,7 +50,6 @@ namespace SchetsEditor
         { 
             return this.UndoList;
         }
-
         public DrawStorage getcurrentState(Size afmetingen, Bitmap backgroundImage = null)
         {
             //Bitmap backImage = (backgroundImage != null) ? backgroundImage : null;

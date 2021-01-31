@@ -34,7 +34,11 @@ namespace SchetsEditor
                                           , this.ClientSize.Height - 80);
             paneel.Location = new Point(64, this.ClientSize.Height - 30);
         }
-
+        /*protected override void OnFormClosing(FormClosingEventArgs fea)
+        {
+            fea.Cancel = true;
+            base.OnFormClosing(fea);
+        }*/
         private void klikToolMenu(object obj, EventArgs ea)
         {
             this.huidigeTool = (ISchetsTool)((ToolStripMenuItem)obj).Tag;
