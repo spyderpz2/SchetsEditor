@@ -16,11 +16,11 @@ namespace SchetsEditor
         /// <summary>
         /// The list containing all of the current `DrawInstuction`s.
         /// </summary>
-        public List<DrawInstuction> UndoList = new List<DrawInstuction>();
+        private List<DrawInstuction> UndoList = new List<DrawInstuction>();
         /// <summary>
         /// The list containing all of the elements that can be redone, only being filled after calling `undo()` method.
         /// </summary>
-        public List<DrawInstuction> RedoList = new List<DrawInstuction>();
+        private List<DrawInstuction> RedoList = new List<DrawInstuction>();
 
         /// <summary>
         /// Adds the drawing instruction to the `UndoList` so it can be retrieved later.
@@ -37,11 +37,7 @@ namespace SchetsEditor
                 RedoList = new List<DrawInstuction>();
             }
         }
-        public void removeInstruction(DrawInstuction instruction)
-        {
-            UndoList.Remove(instruction);
-        }
-          
+
         public UndoRedoController(List<DrawInstuction> undo, List<DrawInstuction> redo) 
         {
             UndoList = undo;
@@ -54,14 +50,10 @@ namespace SchetsEditor
         { 
             return this.UndoList;
         }
-        public void Schoon()
-        {
-        }
         public DrawStorage getcurrentState(Size afmetingen, Bitmap backgroundImage = null)
         {
             //Bitmap backImage = (backgroundImage != null) ? backgroundImage : null;
             return new DrawStorage(this.UndoList, this.RedoList, afmetingen, (backgroundImage != null) ? backgroundImage : null);
-
         }
         /// <summary>
         /// Undoes a 'commit' or drawing action made by the user. E.g. it removes the last drawing from the list.
@@ -274,6 +266,7 @@ namespace SchetsEditor
         {
             return elements[elements.Count - 1];
         }
+
 
         /// <summary>
         /// Reverses the stack of `DrawInstuction`. First becomes last element and vice versa.
