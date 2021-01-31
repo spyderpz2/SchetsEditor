@@ -56,7 +56,7 @@ namespace SchetsEditor
         }
         public void Schoon()
         {
-
+        }
         public DrawStorage getcurrentState(Size afmetingen, Bitmap backgroundImage = null)
         {
             //Bitmap backImage = (backgroundImage != null) ? backgroundImage : null;

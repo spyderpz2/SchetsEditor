@@ -20,6 +20,7 @@ namespace SchetsEditor
             this.KeyPreview = true;
             this.KeyDown += new KeyEventHandler(HoofdschermKeyDown);
         }
+
         private void maakFileMenu()
         {   ToolStripDropDownItem menu;
             menu = new ToolStripMenuItem("File");

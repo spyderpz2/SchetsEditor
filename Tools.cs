@@ -161,7 +161,8 @@ namespace SchetsEditor
             //Check whether the line is drawn with the Pentool, then push the points to the stack penLijn.
             if (this.isPen)
             {
-                this.penLijn.Push(p1); this.penLijn.Push(p2);
+                this.penLijn.Add(p1);
+                this.penLijn.Add(p2);
             }
             g.DrawLine(MaakPen(this.kwast, 3), p1, p2);
 
