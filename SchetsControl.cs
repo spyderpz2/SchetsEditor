@@ -38,6 +38,9 @@ namespace SchetsEditor
             this.Resize += this.veranderAfmeting;
             this.veranderAfmeting(null, null);
         }
+        
+        protected override void OnPaintBackground(PaintEventArgs e) { }
+        
         private void teken(object o, PaintEventArgs pea)
         {
             schets.Teken(pea.Graphics);
