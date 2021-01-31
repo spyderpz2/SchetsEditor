@@ -51,7 +51,7 @@ namespace SchetsEditor
 
             if (sz.Width > bitmap.Size.Width || sz.Height > bitmap.Size.Height)
             {
-                Bitmap nieuw = new Bitmap( Math.Max(sz.Width,  bitmap.Size.Width)
+                Bitmap nieuw = new Bitmap(Math.Max(sz.Width, bitmap.Size.Width)
                                          , Math.Max(sz.Height, bitmap.Size.Height)
                                          );
                 Graphics gr = Graphics.FromImage(nieuw);
@@ -75,7 +75,8 @@ namespace SchetsEditor
                 gr.FillRectangle(Brushes.White, 0, 0, bitmap.Width, bitmap.Height);
                 //Redraw the original background image.
                 gr.DrawImage(this.baseBitmap, new Point(0, 0));
-            } else
+            }
+            else
             {
                 Graphics gr = Graphics.FromImage(bitmap);
                 gr.SmoothingMode = SmoothingMode.AntiAlias;
