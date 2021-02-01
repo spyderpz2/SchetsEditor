@@ -7,7 +7,7 @@ namespace SchetsEditor
     public class Hoofdscherm : Form
     {
         MenuStrip menuStrip;
-        //lol
+        
         public Hoofdscherm()
         {   this.ClientSize = new Size(800, 600);
             menuStrip = new MenuStrip();
@@ -44,7 +44,7 @@ namespace SchetsEditor
 
         private void nieuw(object sender, EventArgs e)
         {   SchetsWin s = new SchetsWin();
-            //s.MdiParent = this;
+
             s.Show();
         }
         private void afsluiten(object sender, EventArgs e)
@@ -56,7 +56,6 @@ namespace SchetsEditor
             if (e.Control && e.KeyCode == Keys.N)
             {
                 // Your code to execute when shortcut Ctrl+N happens here
-                Console.WriteLine("new window?");
                 this.nieuw(null, null);
             }
         }
