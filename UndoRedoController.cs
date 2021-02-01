@@ -295,7 +295,7 @@ namespace SchetsEditor
                     switch (elToDraw.elementType)
                     {
                         case ElementType.Pen:
-                            Point lastPoint = elToDraw.puntenVanLijn.Peek();
+                            Point lastPoint = elToDraw.puntenVanLijn.First();
                             foreach (Point pointOnLine in elToDraw.puntenVanLijn)
                             {
                                 toDrawOn.DrawLine(elToDraw.CreatePen(), lastPoint, pointOnLine);
