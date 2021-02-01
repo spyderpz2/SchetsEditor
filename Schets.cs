@@ -40,15 +40,6 @@ namespace SchetsEditor
 
         public void VeranderAfmeting(Size sz)
         {
-            if (this.baseBitmap != null)
-            {
-                if (this.baseBitmap.Width < sz.Width || this.baseBitmap.Height < sz.Height)
-                {
-                    //Console.WriteLine("fix dit ff"); 
-                }
-
-            }
-
             if (sz.Width > bitmap.Size.Width || sz.Height > bitmap.Size.Height)
             {
                 Bitmap nieuw = new Bitmap(Math.Max(sz.Width, bitmap.Size.Width)
@@ -56,7 +47,6 @@ namespace SchetsEditor
                                          );
                 Graphics gr = Graphics.FromImage(nieuw);
                 gr.SmoothingMode = SmoothingMode.AntiAlias;
-                //Hier kunnen we eventueel de background color bepalen...
                 gr.FillRectangle(Brushes.White, 0, 0, sz.Width, sz.Height);
                 gr.DrawImage(bitmap, 0, 0);
                 bitmap = nieuw;
