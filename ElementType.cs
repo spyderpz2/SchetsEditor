@@ -1,6 +1,6 @@
 ﻿namespace SchetsEditor
 {
-    public enum ElementType
+    public enum ElementType// these are the different types of elements we can find on the bitmap
     {
         Pen,
         Line,
