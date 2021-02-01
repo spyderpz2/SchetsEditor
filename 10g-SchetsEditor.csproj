@@ -90,6 +90,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ElementType.cs" />
+    <Compile Include="DrawInstruction.cs" />
+    <Compile Include="DrawStorage.cs" />
+    <Compile Include="Extension.cs" />
+    <Compile Include="ImageExtensions.cs" />
     <Compile Include="UndoRedoController.cs" />
     <Compile Include="Hoofdscherm.cs">
       <SubType>Form</SubType>

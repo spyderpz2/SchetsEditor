@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Collections.Generic;
+using System.Linq;
 
 
 namespace SchetsEditor
@@ -237,7 +238,7 @@ namespace SchetsEditor
                             visible = gp.IsOutlineVisible(p.X, p.Y, uu.CreatePen());
                             break;
                         case ElementType.Pen:
-                            Point lastPoint = uu.puntenVanLijn.Peek();
+                            Point lastPoint = uu.puntenVanLijn.First();
                             foreach (Point pointOnLine in uu.puntenVanLijn)
                             {
                                 gp.AddLine(pointOnLine, lastPoint);
