@@ -55,7 +55,7 @@ namespace SchetsEditor
             using (OpenFileDialog openDialog = new OpenFileDialog())
             {
                 openDialog.Filter = "Paint ML | *.pml | Alle plaatjes | *.png;*.gif;*.bmp;*.jpg;*.jpeg";
-                openDialog.FilterIndex = 1;
+                openDialog.FilterIndex = 2;
                 openDialog.RestoreDirectory = true;
                 openDialog.ValidateNames = true;
                 openDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
